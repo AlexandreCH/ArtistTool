@@ -1,29 +1,36 @@
 ﻿@inject IImageManager ImageManager
 @rendermode InteractiveServer
 
-<h3>Upload your photographs</h3>
+<div class="upload-header">
+    <h3>Upload your photographs</h3>
+    <p class="upload-summary">Upload up to 10 files (20 MB each). Supported formats: <span>.jpg, .jpeg, .gif, .tif, .tiff, .png</span>.</p>
+</div>
 
-<p>
-    <label>
-        Upload up to 10 files of up to 20 megabytes each. Allowed extensions: <i>.jpg, .jpeg, .gif, .tif, .tiff, .png</i>:
-        <InputFile OnChange="LoadFiles" multiple disabled="@isLoading" />
+<div class="upload-input-group">
+    <label class="upload-label">
+        <span>Select files to add them to your library</span>
+        <InputFile class="upload-input" OnChange="LoadFiles" multiple disabled="@isLoading" />
     </label>
-</p>
+</div>
 
 @if (isLoading)
 {
-    <p>Uploading...</p>
+    <p class="upload-status">Uploading...</p>
 }
 
-<h4>Results:</h4>
-<ul>
-    @foreach (var result in results)
-    {
-        <li>@result</li>
-    }
-</ul>
+<div class="upload-results">
+    <h4>Results</h4>
+    <ul>
+        @foreach (var result in results)
+        {
+            <li>@result</li>
+        }
+    </ul>
+</div>
 
-<button @onclick="Done" disabled="@isLoading">Done</button>
+<div class="upload-actions">
+    <button class="btn-secondary" @onclick="Done" disabled="@isLoading">Done</button>
+</div>
 
 @code {
 

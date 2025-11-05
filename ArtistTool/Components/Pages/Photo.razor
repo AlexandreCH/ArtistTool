@@ -24,7 +24,7 @@ else
                     <div class="checkbox-group">
                         @foreach (var cat in allCategories.Where(c => c.Name != "All"))
                         {
-                            <label class="checkbox-label">
+                            <label class="@GetCategoryPillClass(cat.Name)">
                                 <input type="checkbox" checked="@editCategories.Contains(cat.Name)" 
                                        @onchange="@(e => ToggleCategory(cat.Name, (bool)e.Value!))" />
                                 @cat.Name
@@ -42,22 +42,22 @@ else
                         {
                             <span class="tag-chip">
                                 @tag
-                                <button class="tag-remove" @onclick="() => RemoveTag(tag)">×</button>
+                                <button type="button" class="tag-remove" @onclick="() => RemoveTag(tag)">ï¿½</button>
                             </span>
                         }
                     </div>
                 </div>
 
                 <div class="actions">
-                    <button class="btn-primary" @onclick="SaveAsync" disabled="@saving">@(saving ? "Saving..." : "Save")</button>
-                    <button class="btn-secondary" @onclick="CancelEdit" disabled="@saving">Cancel</button>
+                    <button type="button" class="btn-primary" @onclick="SaveAsync" disabled="@saving">@(saving ? "Saving..." : "Save")</button>
+                    <button type="button" class="btn-secondary" @onclick="CancelEdit" disabled="@saving">Cancel</button>
                 </div>
             }
             else
             {
                 <div class="view-mode">
                     <h1>@photo.Title</h1>
-                    <button class="btn-edit" @onclick="StartEdit">Edit</button>
+                    <button type="button" class="btn-edit" @onclick="StartEdit">Edit</button>
                 </div>
                 @if (!string.IsNullOrWhiteSpace(photo.Description))
                 {
@@ -154,6 +154,9 @@ else
     {
         editTags.Remove(tag);
     }
+
+    string GetCategoryPillClass(string categoryName)
+        => $"checkbox-label{(editCategories.Contains(categoryName) ? " selected" : string.Empty)}";
 
     async Task SaveAsync()
     {

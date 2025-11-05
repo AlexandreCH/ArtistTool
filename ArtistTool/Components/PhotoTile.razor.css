@@ -1,15 +1,18 @@
 ﻿.photo-tile {
     position: relative;
-    border: 1px solid #333;
-    border-radius: 8px;
+    border: 1px solid rgba(148, 163, 184, 0.35);
+    border-radius: 22px;
     overflow: hidden;
     width: 240px;
     height: 240px;
     display: flex;
     align-items: center;
     justify-content: center;
-    background-color: #000;
+    background: #f5f7fb;
     isolation: isolate;
+    transition: transform 0.2s ease, box-shadow 0.25s ease, border-color 0.2s ease;
+    text-decoration: none;
+    color: inherit;
 }
 
 .photo-tile img {
@@ -21,18 +24,21 @@
     z-index: 0;
 }
 
-.photo-tile.empty { background:#222; color:#999; }
+.photo-tile.empty {
+    background: #e7ecf7;
+    color: #94a3b8;
+}
 
 .photo-title {
     position: absolute;
     left: 0;
     right: 0;
     bottom: 0;
-    padding: 6px 10px;
-    font-size: 15px;
+    padding: 10px 12px;
+    font-size: 0.95rem;
     font-weight: 600;
-    background: linear-gradient(to top, rgba(0,0,0,.65), rgba(0,0,0,.25));
-    color: #fff;
+    background: linear-gradient(to top, rgba(15, 23, 42, 0.55), rgba(15, 23, 42, 0.15));
+    color: #f8fafc;
     z-index: 1;
     backdrop-filter: blur(2px);
 }
@@ -43,25 +49,35 @@
     display: flex;
     align-items: center;
     justify-content: center;
-    padding: 14px;
+    padding: 1.2rem;
     text-align: center;
-    font-size: 14px;
-    line-height: 1.3;
-    color: #fff;
-    background: rgba(0,0,0,.7);
+    font-size: 0.9rem;
+    line-height: 1.4;
+    color: #e2e8f0;
+    background: rgba(15, 23, 42, 0.72);
     opacity: 0;
-    transform: scale(.98);
-    transition: opacity .25s ease, transform .25s ease;
+    transform: translateY(12px);
+    transition: opacity 0.25s ease, transform 0.25s ease;
     z-index: 2;
-    backdrop-filter: blur(3px);
+    backdrop-filter: blur(6px);
 }
 
-.photo-tile:hover .photo-description { opacity: 1; transform: scale(1); }
-.photo-tile:hover { box-shadow: 0 6px 18px rgba(0,0,0,.35); cursor: pointer; }
+.photo-tile:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 20px 40px -24px rgba(15, 23, 42, 0.55);
+    border-color: rgba(79, 140, 244, 0.55);
+    cursor: pointer;
+}
 
-.photo-tile.selected { outline:2px solid #4da3ff; box-shadow:0 0 0 3px rgba(77,163,255,.35); }
+.photo-tile:hover .photo-description {
+    opacity: 1;
+    transform: translateY(0);
+}
 
-.photo-tile-grid { gap:20px; }
+.photo-tile.selected {
+    outline: 2px solid #4f8cf4;
+    box-shadow: 0 0 0 4px rgba(79, 140, 244, 0.25);
+}
 
 
 

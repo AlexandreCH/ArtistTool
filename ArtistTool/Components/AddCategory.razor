@@ -15,8 +15,8 @@
         </label>
     </div>
     <div class="actions">
-        <button disabled="@string.IsNullOrWhiteSpace(name)" @onclick="AddAsync">Save</button>
-        <button @onclick="Cancel">Cancel</button>
+    <button type="button" class="btn-primary" disabled="@string.IsNullOrWhiteSpace(name)" @onclick="AddAsync">Save</button>
+    <button type="button" class="btn-secondary" @onclick="Cancel">Cancel</button>
     </div>
     @if (!string.IsNullOrEmpty(message))
     {

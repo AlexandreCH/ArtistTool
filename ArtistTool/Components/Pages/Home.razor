@@ -4,38 +4,81 @@
 
 <PageTitle>Home</PageTitle>
 
-<button disabled="@addingCategory" @onclick="ToggleAddingPhotographs">@(addingPhotographs ? "Close uploader" : "Add photographs")</button>
-<button disabled="@addingPhotographs" @onclick="ToggleAddingCategory">@(addingCategory ? "Close category" : "Add category")</button>
+<div class="home-container">
+    <section class="home-actions">
+        <div class="home-action-buttons">
+            <button type="button"
+                    class="@GetToggleClass(addingPhotographs)"
+                    disabled="@addingCategory"
+                    @onclick="ToggleAddingPhotographs">
+                @(addingPhotographs ? "Close Uploader" : "Upload Photographs")
+            </button>
+            <button type="button"
+                    class="@GetToggleClass(addingCategory)"
+                    disabled="@addingPhotographs"
+                    @onclick="ToggleAddingCategory">
+                @(addingCategory ? "Close Category" : "Create Category")
+            </button>
+        </div>
 
-@if (addingPhotographs)
-{
-    <UploadPhoto @bind-AddingPhotographs="addingPhotographs" OnCompleted="OnUploadCompleted" />
-}
-@if (addingCategory)
-{
-    <AddCategory @bind-AddingCategory="addingCategory" OnCompleted="OnCategoryAdded" />
-}
+        @if (addingPhotographs)
+        {
+            <section class="home-panel upload-panel">
+                <UploadPhoto @bind-AddingPhotographs="addingPhotographs" OnCompleted="OnUploadCompleted" />
+            </section>
+        }
 
-<hr/>
+        @if (addingCategory)
+        {
+            <section class="home-panel category-panel">
+                <AddCategory @bind-AddingCategory="addingCategory" OnCompleted="OnCategoryAdded" />
+            </section>
+        }
+    </section>
 
-@foreach(var category in categories)
-{
-    <button disabled="@(addingPhotographs || addingCategory || activeCategory?.Name == category.Name)" @onclick="() => SetActiveCategoryAsync(category)">@category.Name (@category.Photographs.Count())</button>
-}
+    <div class="home-separator" role="presentation"></div>
 
-@if (!(activeCategory is null))
-{
-    <h2>@activeCategory.Name</h2>
-    <p>@activeCategory.Description</p>
-    @if(!addingPhotographs)
-    {
-        <PhotosGrid Photographs="activePhotographs" />
-    }
-}
-else
-{
-    <h2>Choose a category to browse images</h2>
-}
+    <section class="home-categories">
+        <div class="category-pill-row">
+            @foreach (var category in categories)
+            {
+                var isActive = activeCategory?.Name == category.Name;
+        <button type="button"
+            class="category-pill @(isActive ? "active" : string.Empty)"
+            disabled="@(addingPhotographs || addingCategory)"
+            @onclick="() => SetActiveCategoryAsync(category)">
+                    <span class="pill-name">@category.Name</span>
+                    <span class="pill-count">@category.Photographs.Count()</span>
+                </button>
+            }
+        </div>
+
+        @if (activeCategory is not null)
+        {
+            <div class="category-details">
+                <h2>@activeCategory.Name</h2>
+                @if (!string.IsNullOrWhiteSpace(activeCategory.Description))
+                {
+                    <p>@activeCategory.Description</p>
+                }
+            </div>
+
+            @if (!addingPhotographs)
+            {
+                <div class="home-gallery">
+                    <PhotosGrid Photographs="activePhotographs" />
+                </div>
+            }
+        }
+        else
+        {
+            <div class="category-empty">
+                <h2>Select a category to browse your images</h2>
+                <p>Create a new category or upload photographs to get started.</p>
+            </div>
+        }
+    </section>
+</div>
 
 @code {
     bool addingPhotographs = false;
@@ -43,6 +86,8 @@ else
     Category? activeCategory = null;
     Category[] categories = [];
     Photograph[] activePhotographs = [];
+
+    string GetToggleClass(bool isActive) => $"home-toggle{(isActive ? " active" : string.Empty)}";
 
     void ToggleAddingPhotographs() => addingPhotographs = !addingPhotographs;
     void ToggleAddingCategory() => addingCategory = !addingCategory;

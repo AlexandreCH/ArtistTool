@@ -21,13 +21,13 @@
 
 
 #components-reconnect-modal {
-    background-color: white;
-    width: 20rem;
-    margin: 20vh auto;
-    padding: 2rem;
-    border: 0;
-    border-radius: 0.5rem;
-    box-shadow: 0 3px 6px 2px rgba(0, 0, 0, 0.3);
+    background-color: rgba(255, 255, 255, 0.96);
+    width: min(24rem, 92vw);
+    margin: 18vh auto;
+    padding: 2.2rem 2.4rem;
+    border: 1px solid rgba(148, 163, 184, 0.25);
+    border-radius: 26px;
+    box-shadow: 0 24px 60px -36px rgba(15, 23, 42, 0.4);
     opacity: 0;
     transition: display 0.5s allow-discrete, overlay 0.5s allow-discrete;
     animation: components-reconnect-modal-fadeOutOpacity 0.5s both;
@@ -41,7 +41,7 @@
 }
 
 #components-reconnect-modal::backdrop {
-    background-color: rgba(0, 0, 0, 0.4);
+    background-color: rgba(15, 23, 42, 0.35);
     animation: components-reconnect-modal-fadeInOpacity 0.5s ease-in-out;
     opacity: 1;
 }
@@ -86,22 +86,26 @@
 #components-reconnect-modal p {
     margin: 0;
     text-align: center;
+    color: #475569;
+    line-height: 1.5;
 }
 
 #components-reconnect-modal button {
     border: 0;
-    background-color: #6b9ed2;
-    color: white;
-    padding: 4px 24px;
-    border-radius: 4px;
+    background: linear-gradient(135deg, #4f8cf4, #4fd8c2);
+    color: #ffffff;
+    padding: 0.55rem 1.5rem;
+    border-radius: 999px;
+    font-weight: 600;
+    box-shadow: 0 16px 32px -20px rgba(37, 99, 235, 0.55);
 }
 
     #components-reconnect-modal button:hover {
-        background-color: #3b6ea2;
+        background: linear-gradient(135deg, #3e7df2, #3fcbb5);
     }
 
     #components-reconnect-modal button:active {
-        background-color: #6b9ed2;
+        background: linear-gradient(135deg, #4f8cf4, #4fd8c2);
     }
 
 .components-rejoining-animation {
@@ -112,7 +116,7 @@
 
     .components-rejoining-animation div {
         position: absolute;
-        border: 3px solid #0087ff;
+        border: 3px solid #4f8cf4;
         opacity: 1;
         border-radius: 50%;
         animation: components-rejoining-animation 1.5s cubic-bezier(0, 0.2, 0.8, 1) infinite;
