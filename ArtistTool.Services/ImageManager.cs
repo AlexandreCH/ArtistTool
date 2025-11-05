@@ -69,10 +69,16 @@ namespace ArtistTool.Services
                 try
                 {
                     _logger.LogDebug("Writing image bytes to {Path}", photo.Path);
-                    await using FileStream fs = new(photo.Path, FileMode.Create);
-                    await writeBytesAsync(fs);
-                    _logger.LogDebug("Image bytes written successfully for {ImageId}", id);
+                    // Use a separate scope to ensure the FileStream is fully disposed before AddPhotographAsync
+                    {
+                        await using FileStream fs = new(photo.Path, FileMode.Create, FileAccess.Write, FileShare.None);
+                        await writeBytesAsync(fs);
+                        await fs.FlushAsync();
+                    } // FileStream is disposed here
                     
+                    _logger.LogDebug("Image bytes written and file closed successfully for {ImageId}", id);
+                    
+                    // Now that file is fully written and closed, add to database (which may trigger AI analysis)
                     await photoDatabase.AddPhotographAsync(photo);
                     _logger.LogInformation("Successfully saved image {ImageId} - {Title} at {Path}", id, photo.Title, photo.Path);
                     return photo;

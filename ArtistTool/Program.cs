@@ -1,5 +1,6 @@
 using ArtistTool.Components;
 using ArtistTool.Domain;
+using ArtistTool.Intelligence;
 using ArtistTool.Services;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -10,19 +11,18 @@ builder.AddServiceDefaults();
 builder.Services.AddRazorComponents()
     .AddInteractiveServerComponents();
 
-// Register database with proper async initialization
-builder.Services.AddSingleton<IPhotoDatabase>(sp =>
-{
-    var logger = sp.GetRequiredService<ILogger<PersistentPhotoDatabase>>();
-    var db = new PersistentPhotoDatabase(logger);
-    return db;
-});
+builder.Services.AddSingleton<PhotoIntelligenceService>();
 
+// Register database with proper async initialization
+builder.Services.AddSingleton<IPhotoDatabase, IntelligentPhotoDatabase>();
+builder.Services.AddSingleton<IAIClientProvider>(sp => new AzureOpenAIClientProvider(
+    builder.Configuration["AzureOpenAI:Endpoint"]!,
+    builder.Configuration["AzureOpenAI:ConversationalDeployment"]!,
+    builder.Configuration["AzureOpenAI:VisionDeployment"]!));
 builder.Services.AddSingleton<IImageManager, ImageManager>();
 
 var app = builder.Build();
 
-// Initialize database after building the app
 var dbLogger = app.Services.GetRequiredService<ILogger<Program>>();
 var database = app.Services.GetRequiredService<IPhotoDatabase>();
 if (database is PersistentPhotoDatabase persistentDb)
@@ -30,6 +30,12 @@ if (database is PersistentPhotoDatabase persistentDb)
     dbLogger.LogInformation("Initializing PersistentPhotoDatabase");
     await persistentDb.InitAsync();
     dbLogger.LogInformation("PersistentPhotoDatabase initialized successfully");
+}
+else if (database is IntelligentPhotoDatabase intelligentDb)
+{
+    dbLogger.LogInformation("Initializing IntelligentPhotoDatabase");
+    await intelligentDb.InitAsync();
+    dbLogger.LogInformation("IntelligentPhotoDatabase initialized successfully");
 }
 
 app.MapDefaultEndpoints();

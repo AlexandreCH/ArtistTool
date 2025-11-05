@@ -1,6 +1,7 @@
 <Solution>
   <Project Path="ArtistTool.AppHost/ArtistTool.AppHost.csproj" />
   <Project Path="ArtistTool.Domain/ArtistTool.Domain.csproj" />
+  <Project Path="ArtistTool.Intelligence/ArtistTool.Intelligence.csproj" Id="698d2f70-2d9b-4d83-848d-c3265ddc707a" />
   <Project Path="ArtistTool.ServiceDefaults/ArtistTool.ServiceDefaults.csproj" />
   <Project Path="ArtistTool.Services/ArtistTool.Services.csproj" />
   <Project Path="ArtistTool/ArtistTool.csproj" />

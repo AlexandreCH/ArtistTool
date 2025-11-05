@@ -1,4 +1,4 @@
-<Project Sdk="Microsoft.NET.Sdk.Web">
+﻿<Project Sdk="Microsoft.NET.Sdk.Web">
 
   <PropertyGroup>
     <TargetFramework>net10.0</TargetFramework>
@@ -9,6 +9,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\ArtistTool.Domain\ArtistTool.Domain.csproj" />
+    <ProjectReference Include="..\ArtistTool.Intelligence\ArtistTool.Intelligence.csproj" />
     <ProjectReference Include="..\ArtistTool.ServiceDefaults\ArtistTool.ServiceDefaults.csproj" />
     <ProjectReference Include="..\ArtistTool.Services\ArtistTool.Services.csproj" />
   </ItemGroup>
