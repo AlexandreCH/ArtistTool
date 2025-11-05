@@ -1,0 +1,85 @@
+﻿@inject IImageManager ImageManager
+@rendermode InteractiveServer
+
+<h3>Upload your photographs</h3>
+
+<p>
+    <label>
+        Upload up to 10 files of up to 20 megabytes each. Allowed extensions: <i>.jpg, .jpeg, .gif, .tif, .tiff, .png</i>:
+        <InputFile OnChange="LoadFiles" multiple disabled="@isLoading" />
+    </label>
+</p>
+
+@if (isLoading)
+{
+    <p>Uploading...</p>
+}
+
+<h4>Results:</h4>
+<ul>
+    @foreach (var result in results)
+    {
+        <li>@result</li>
+    }
+</ul>
+
+<button @onclick="Done" disabled="@isLoading">Done</button>
+
+@code {
+
+    [Parameter]
+    public bool AddingPhotographs { get; set; }
+
+    [Parameter]
+    public EventCallback<bool> AddingPhotographsChanged { get; set; }
+
+    [Parameter]
+    public EventCallback OnCompleted { get; set; }
+
+    private List<string> results = [];
+    private long maxFileSize = 20 * Utility.Megabyte;
+    private int maxAllowedFiles = 10;
+    private bool isLoading;
+
+    private async Task LoadFiles(InputFileChangeEventArgs e)
+    {
+        var files = e.GetMultipleFiles(maxAllowedFiles);
+        isLoading = true;
+        StateHasChanged();
+        results.Clear();
+
+        foreach (var file in files)
+        {
+            try
+            {
+                await ImageManager.SaveImageAsync(
+                    file.Name,
+                    file.ContentType,
+                    async fs =>
+                    {
+                        await using var source = file.OpenReadStream(maxFileSize);
+                        await source.CopyToAsync(fs);
+                    });
+                results.Add($"Successfully loaded '{file.Name}' ({file.Size.AsByteSize()}) - {file.ContentType}");
+            }
+            catch (Exception ex)
+            {
+                results.Add($"Issue adding {file.Name}: {ex.Message}");
+            }
+        }
+
+        isLoading = false;
+        StateHasChanged();
+    }
+
+    private async Task Done()
+    {
+        if (isLoading) return;
+        AddingPhotographs = false;
+        await AddingPhotographsChanged.InvokeAsync(false);
+        if (OnCompleted.HasDelegate)
+        {
+            await OnCompleted.InvokeAsync();
+        }
+    }
+}

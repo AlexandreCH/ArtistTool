@@ -1,0 +1,7 @@
+<Solution>
+  <Project Path="ArtistTool.AppHost/ArtistTool.AppHost.csproj" />
+  <Project Path="ArtistTool.Domain/ArtistTool.Domain.csproj" />
+  <Project Path="ArtistTool.ServiceDefaults/ArtistTool.ServiceDefaults.csproj" />
+  <Project Path="ArtistTool.Services/ArtistTool.Services.csproj" />
+  <Project Path="ArtistTool/ArtistTool.csproj" />
+</Solution>

@@ -1,0 +1,89 @@
+﻿@page "/"
+@inject IPhotoDatabase Db
+@rendermode InteractiveServer
+
+<PageTitle>Home</PageTitle>
+
+<button disabled="@addingCategory" @onclick="ToggleAddingPhotographs">@(addingPhotographs ? "Close uploader" : "Add photographs")</button>
+<button disabled="@addingPhotographs" @onclick="ToggleAddingCategory">@(addingCategory ? "Close category" : "Add category")</button>
+
+@if (addingPhotographs)
+{
+    <UploadPhoto @bind-AddingPhotographs="addingPhotographs" OnCompleted="OnUploadCompleted" />
+}
+@if (addingCategory)
+{
+    <AddCategory @bind-AddingCategory="addingCategory" OnCompleted="OnCategoryAdded" />
+}
+
+<hr/>
+
+@foreach(var category in categories)
+{
+    <button disabled="@(addingPhotographs || addingCategory || activeCategory?.Name == category.Name)" @onclick="() => SetActiveCategoryAsync(category)">@category.Name (@category.Photographs.Count())</button>
+}
+
+@if (!(activeCategory is null))
+{
+    <h2>@activeCategory.Name</h2>
+    <p>@activeCategory.Description</p>
+    @if(!addingPhotographs)
+    {
+        <PhotosGrid Photographs="activePhotographs" />
+    }
+}
+else
+{
+    <h2>Choose a category to browse images</h2>
+}
+
+@code {
+    bool addingPhotographs = false;
+    bool addingCategory = false;
+    Category? activeCategory = null;
+    Category[] categories = [];
+    Photograph[] activePhotographs = [];
+
+    void ToggleAddingPhotographs() => addingPhotographs = !addingPhotographs;
+    void ToggleAddingCategory() => addingCategory = !addingCategory;
+
+    async Task OnUploadCompleted() => await RefreshAfterChange();
+    async Task OnCategoryAdded() => await RefreshAfterChange();
+
+    async Task RefreshAfterChange()
+    {
+        categories = [.. await Db.ListCategoriesAsync()];
+        if (activeCategory is not null)
+        {
+            activeCategory = categories.FirstOrDefault(c => c.Name == activeCategory.Name) ?? activeCategory;
+            await LoadPhotographsAsync();
+        }
+        StateHasChanged();
+    }
+
+    async Task SetActiveCategoryAsync(Category category)
+    {
+        activeCategory = category;
+        await LoadPhotographsAsync();
+    }
+
+    async Task LoadPhotographsAsync()
+    {
+        if (activeCategory is null)
+        {
+            activePhotographs = [];
+            StateHasChanged();
+            return;
+        }
+        var tasks = activeCategory.Photographs.Select(id => Db.GetPhotographWithIdAsync(id));
+        var resolved = await Task.WhenAll(tasks);
+        activePhotographs = resolved.Where(p => p is not null).Select(p => p!).ToArray();
+        StateHasChanged();
+    }
+
+    protected override async Task OnInitializedAsync()
+    {
+        categories = [.. await Db.ListCategoriesAsync()];
+    }
+}
+

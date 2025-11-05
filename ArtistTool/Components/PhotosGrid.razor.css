@@ -1,0 +1,5 @@
+﻿.photo-tile-grid {
+    display: inline-flex;
+    flex-wrap: wrap;
+    gap: 16px;
+}

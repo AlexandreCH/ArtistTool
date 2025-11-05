@@ -1,0 +1,71 @@
+@inject IPhotoDatabase Db
+@rendermode InteractiveServer
+
+<h3>Add a category</h3>
+
+<div class="add-category-form">
+    <div>
+        <label>Name:
+            <input @bind="name" placeholder="Category name" />
+        </label>
+    </div>
+    <div>
+        <label>Description:
+            <textarea @bind="description" placeholder="Short description"></textarea>
+        </label>
+    </div>
+    <div class="actions">
+        <button disabled="@string.IsNullOrWhiteSpace(name)" @onclick="AddAsync">Save</button>
+        <button @onclick="Cancel">Cancel</button>
+    </div>
+    @if (!string.IsNullOrEmpty(message))
+    {
+        <p class="status">@message</p>
+    }
+</div>
+
+@code {
+    [Parameter] public bool AddingCategory { get; set; }
+    [Parameter] public EventCallback<bool> AddingCategoryChanged { get; set; }
+    [Parameter] public EventCallback OnCompleted { get; set; }
+
+    string name = string.Empty;
+    string description = string.Empty;
+    string message = string.Empty;
+    bool isSaving;
+
+    async Task AddAsync()
+    {
+        if (isSaving) return;
+        isSaving = true;
+        message = string.Empty;
+        try
+        {
+            var category = new Category { Name = name.Trim(), Description = description.Trim() };
+            await Db.AddCategoryAsync(category);
+            await FinishAsync();
+        }
+        catch (Exception ex)
+        {
+            message = ex.Message;
+        }
+        finally
+        {
+            isSaving = false;
+        }
+    }
+
+    async Task Cancel() => await FinishAsync(false);
+
+    async Task FinishAsync(bool invokeCompleted = true)
+    {
+        AddingCategory = false;
+        await AddingCategoryChanged.InvokeAsync(false);
+        if (invokeCompleted && OnCompleted.HasDelegate)
+        {
+            await OnCompleted.InvokeAsync();
+        }
+        name = string.Empty;
+        description = string.Empty;
+    }
+}

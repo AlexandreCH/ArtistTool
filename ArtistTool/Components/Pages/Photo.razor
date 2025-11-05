@@ -1,0 +1,182 @@
+@page "/photo/{Id}"
+@inject IPhotoDatabase Db
+@rendermode InteractiveServer
+
+@if (loading)
+{
+    <p>Loading photograph...</p>
+}
+else if (photo is null)
+{
+    <h2>Photo not found</h2>
+}
+else
+{
+    <div class="photo-view">
+        <header class="photo-header">
+            @if (editing)
+            {
+                <input class="edit-title" @bind="editTitle" placeholder="Title" />
+                <textarea class="edit-description" @bind="editDescription" placeholder="Description" rows="3"></textarea>
+                
+                <div class="edit-section">
+                    <h3>Categories</h3>
+                    <div class="checkbox-group">
+                        @foreach (var cat in allCategories.Where(c => c.Name != "All"))
+                        {
+                            <label class="checkbox-label">
+                                <input type="checkbox" checked="@editCategories.Contains(cat.Name)" 
+                                       @onchange="@(e => ToggleCategory(cat.Name, (bool)e.Value!))" />
+                                @cat.Name
+                            </label>
+                        }
+                    </div>
+                </div>
+
+                <div class="edit-section">
+                    <h3>Tags</h3>
+                    <input class="tag-input" @bind="newTag" @bind:event="oninput" placeholder="Add tag and press Enter" 
+                           @onkeydown="HandleTagKeyDown" />
+                    <div class="tag-list">
+                        @foreach (var tag in editTags)
+                        {
+                            <span class="tag-chip">
+                                @tag
+                                <button class="tag-remove" @onclick="() => RemoveTag(tag)">×</button>
+                            </span>
+                        }
+                    </div>
+                </div>
+
+                <div class="actions">
+                    <button class="btn-primary" @onclick="SaveAsync" disabled="@saving">@(saving ? "Saving..." : "Save")</button>
+                    <button class="btn-secondary" @onclick="CancelEdit" disabled="@saving">Cancel</button>
+                </div>
+            }
+            else
+            {
+                <div class="view-mode">
+                    <h1>@photo.Title</h1>
+                    <button class="btn-edit" @onclick="StartEdit">Edit</button>
+                </div>
+                @if (!string.IsNullOrWhiteSpace(photo.Description))
+                {
+                    <p class="description">@photo.Description</p>
+                }
+                <div class="categories">
+                    @foreach (var cat in photo.Categories.Where(c => c != "All"))
+                    {
+                        <span class="category-pill">@cat</span>
+                    }
+                </div>
+                @if (photo.Tags.Length > 0)
+                {
+                    <div class="tags">
+                        @foreach (var tag in photo.Tags)
+                        {
+                            <span class="tag-pill">@tag</span>
+                        }
+                    </div>
+                }
+            }
+        </header>
+        <div class="photo-canvas">
+            <img src="/images/full/@photo.Id" alt="@photo.Title" />
+        </div>
+    </div>
+}
+
+@code {
+    [Parameter] public string Id { get; set; } = string.Empty;
+    Photograph? photo;
+    bool loading = true;
+    bool editing = false;
+    bool saving = false;
+
+    string editTitle = string.Empty;
+    string editDescription = string.Empty;
+    List<string> editCategories = new();
+    List<string> editTags = new();
+    string newTag = string.Empty;
+
+    Category[] allCategories = [];
+
+    protected override async Task OnParametersSetAsync()
+    {
+        loading = true;
+        photo = await Db.GetPhotographWithIdAsync(Id);
+        allCategories = (await Db.ListCategoriesAsync()).ToArray();
+        loading = false;
+    }
+
+    void StartEdit()
+    {
+        if (photo is null) return;
+        editing = true;
+        editTitle = photo.Title;
+        editDescription = photo.Description;
+        editCategories = photo.Categories.Where(c => c != "All").ToList();
+        editTags = photo.Tags.ToList();
+    }
+
+    void CancelEdit()
+    {
+        editing = false;
+        newTag = string.Empty;
+    }
+
+    void ToggleCategory(string categoryName, bool isChecked)
+    {
+        if (isChecked && !editCategories.Contains(categoryName))
+        {
+            editCategories.Add(categoryName);
+        }
+        else if (!isChecked)
+        {
+            editCategories.Remove(categoryName);
+        }
+    }
+
+    void HandleTagKeyDown(KeyboardEventArgs e)
+    {
+        if (e.Key == "Enter" && !string.IsNullOrWhiteSpace(newTag))
+        {
+            var tag = newTag.Trim();
+            if (!editTags.Contains(tag))
+            {
+                editTags.Add(tag);
+            }
+            newTag = string.Empty;
+        }
+    }
+
+    void RemoveTag(string tag)
+    {
+        editTags.Remove(tag);
+    }
+
+    async Task SaveAsync()
+    {
+        if (photo is null || saving) return;
+        saving = true;
+        try
+        {
+            photo.Title = editTitle.Trim();
+            photo.Description = editDescription.Trim();
+            photo.Categories = editCategories.ToArray();
+            photo.Tags = editTags.ToArray();
+
+            await Db.UpdatePhotographAsync(photo);
+            editing = false;
+        }
+        catch (Exception ex)
+        {
+            // Handle error (could add error message display)
+            Console.WriteLine($"Error saving: {ex.Message}");
+        }
+        finally
+        {
+            saving = false;
+        }
+    }
+}

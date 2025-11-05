@@ -1,0 +1,32 @@
+﻿@inject IPhotoDatabase Db
+
+@if (Photo is null)
+{
+    <div class="photo-tile empty">
+        <div class="photo-title">No Photo</div>
+    </div>
+    return;
+}
+<a class="photo-tile" href="photo/@Photo.Id">
+    <img src="/images/thumb/@Photo.Id" alt="@Photo.Title" />
+    <div class="photo-title">@Photo.Title</div>
+    <div class="photo-description">@Photo.Description</div>
+</a>
+@code {
+    [Parameter]
+    public string? Id { get; set; }
+
+    public Photograph? Photo { get; set; }
+
+    protected override Task OnParametersSetAsync() => LoadPhotoAsync();
+
+    private async Task LoadPhotoAsync()
+    {
+        if (Id is null)
+        {
+            Photo = null;
+            return;
+        }
+        Photo = await Db.GetPhotographWithIdAsync(Id);
+    }
+}

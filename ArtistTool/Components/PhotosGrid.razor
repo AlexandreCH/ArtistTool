@@ -1,0 +1,10 @@
+﻿<div class="photo-tile-grid">
+    @foreach (var photo in Photographs)
+    {
+        <PhotoTile Id="@photo.Id" />
+    }
+</div>
+@code {
+    [Parameter]
+    public IEnumerable<Photograph> Photographs { get; set; } = Array.Empty<Photograph>();
+}
