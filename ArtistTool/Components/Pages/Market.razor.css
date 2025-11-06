@@ -183,13 +183,13 @@
 
 .btn-buy:not(:disabled):hover { background: #059669; transform: translateY(-1px); box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1); }
 
-.btn-buy:disabled { background: #d1d5db; cursor: not-allowed; opacity: 0.6; }
+.btn-buy:disabled { background: #9ca3af; color: #e5e7eb; cursor: not-allowed; opacity: 1; border: 1px solid #6b7280; }
 
 .btn-add-cart { background: #3b82f6; color: white; flex: 1; }
 
 .btn-add-cart:not(:disabled):hover { background: #2563eb; }
 
-.btn-add-cart:disabled { background: #d1d5db; cursor: not-allowed; opacity: 0.6; }
+.btn-add-cart:disabled { background: #9ca3af; color: #e5e7eb; cursor: not-allowed; opacity: 1; border: 1px solid #6b7280; }
 
 .btn-icon { font-size: 1.25rem; }
 

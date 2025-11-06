@@ -89,7 +89,16 @@
 
     string GetToggleClass(bool isActive) => $"home-toggle{(isActive ? " active" : string.Empty)}";
 
-    void ToggleAddingPhotographs() => addingPhotographs = !addingPhotographs;
+    async Task ToggleAddingPhotographs()
+    {
+        var wasOpen = addingPhotographs;
+        addingPhotographs = !addingPhotographs;
+        // If closing the upload panel, trigger refresh
+        if (wasOpen && !addingPhotographs)
+        {
+            await RefreshAfterChange();
+        }
+    }
     void ToggleAddingCategory() => addingCategory = !addingCategory;
 
     async Task OnUploadCompleted() => await RefreshAfterChange();

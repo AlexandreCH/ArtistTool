@@ -1,6 +1,7 @@
 using ArtistTool.Domain;
 using Microsoft.Extensions.AI;
 using Microsoft.Extensions.Logging;
+using System.Text.Json;
 
 namespace ArtistTool.Intelligence
 {
@@ -91,6 +92,16 @@ namespace ArtistTool.Intelligence
         {
             logger.LogDebug("Generating canvas visualization image for {PhotoId}", photo.Id);
 
+            var previewPath = Path.Combine(
+                Path.GetDirectoryName(photo.Path)!,
+                $"{photo.Id}_canvas_preview.png");
+
+            if (File.Exists(previewPath))
+            {
+                logger.LogInformation("Canvas preview already exists at {Path}, skipping generation", previewPath);
+                return previewPath;
+            }
+
             // Step 1: Retrieve the original image
             byte[] imageBytes;
             using (var fs = new FileStream(photo.Path, FileMode.Open, FileAccess.Read, FileShare.Read))
@@ -125,12 +136,7 @@ namespace ArtistTool.Intelligence
 
             if (generatedImageContent?.Data != null)
             {
-                // Save the generated canvas preview image
-                var previewPath = Path.Combine(
-                    Path.GetDirectoryName(photo.Path)!,
-                    $"{photo.Id}_canvas_preview.png"
-                );
-
+             
                 await File.WriteAllBytesAsync(previewPath, generatedImageContent.Data);
                 
                 logger.LogInformation("Canvas visualization image saved to {Path} ({Size} bytes)", 
@@ -160,6 +166,16 @@ namespace ArtistTool.Intelligence
         private async Task<MarketingContent> GenerateMarketingContentAsync(Photograph photo)
         {
             logger.LogDebug("Generating marketing content for {PhotoId} - {Title}", photo.Id, photo.Title);
+            
+            var marketingPreviewPath = Path.Combine(
+                Path.GetDirectoryName(photo.Path)!,
+                $"{photo.Id}_marketing.json");
+
+            if (File.Exists(marketingPreviewPath))
+            {
+                return JsonSerializer.Deserialize<MarketingContent>(
+                    await File.ReadAllTextAsync(marketingPreviewPath))!;
+            }
 
             var conversationalClient = aiClientProvider.GetConversationalClient();
 
@@ -186,6 +202,7 @@ Make the content professional, compelling, and focused on the emotional and aest
             };
 
             var response = await conversationalClient.GetResponseAsync<MarketingContent>(messages);
+            await File.WriteAllTextAsync(marketingPreviewPath, JsonSerializer.Serialize(response.Result));
             return response.Result;
         }
 

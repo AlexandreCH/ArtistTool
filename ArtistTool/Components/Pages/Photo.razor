@@ -1,5 +1,6 @@
 @page "/photo/{Id}"
 @inject IPhotoDatabase Db
+@inject NavigationManager Navigation
 @rendermode InteractiveServer
 
 @if (loading)
@@ -59,7 +60,7 @@ else
                     <h1>@photo.Title</h1>
                     <div class="action-buttons">
                         <button type="button" class="btn-edit" @onclick="StartEdit">Edit</button>
-                        <a href="/market/@photo.Id" class="btn-market">🎨 Market This</a>
+                        <button type="button" class="btn-market" @onclick="NavigateToMarket">🎨 Market This</button>
                     </div>
                 </div>
                 @if (!string.IsNullOrWhiteSpace(photo.Description))
@@ -183,6 +184,14 @@ else
         finally
         {
             saving = false;
+        }
+    }
+
+    void NavigateToMarket()
+    {
+        if (photo is not null)
+        {
+            Navigation.NavigateTo($"/market/{photo.Id}");
         }
     }
 }

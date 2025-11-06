@@ -1,4 +1,4 @@
-@page "/market/{Id}"
+﻿@page "/market/{Id}"
 @inject ArtistTool.Domain.IPhotoDatabase Db
 @inject ArtistTool.Intelligence.PhotoIntelligenceService IntelligenceService
 @inject IJSRuntime JS
@@ -24,7 +24,7 @@ else
 {
     <div class="market-page">
         <div class="market-header">
-            <a href="/photo/@Id" class="back-link">? Back to Photo Details</a>
+            <a href="/photo/@Id" class="back-link">← Back to Photo Details</a>
             <h1>Marketing Preview</h1>
         </div>
 
@@ -83,24 +83,24 @@ else
 
                 <div class="action-buttons">
                     <button class="btn-buy" disabled>
-                        <span class="btn-icon">??</span>
+                        <span class="btn-icon">🛒</span>
                         Buy Now (Coming Soon)
                     </button>
                     <button class="btn-add-cart" disabled>
-                        Add to Cart
+                        🛍️ Add to Cart
                     </button>
                 </div>
 
                 <div class="social-section">
                     <h3>Share on Social Media</h3>
                     <div class="twitter-preview">
-                        <div class="twitter-icon">??</div>
+                        <div class="twitter-icon">𝕏</div>
                         <div class="twitter-content">
                             <p>@canvasPreview.TwitterText</p>
                         </div>
                     </div>
                     <button class="btn-copy-twitter" @onclick="CopyTwitterText">
-                        <span class="btn-icon">@(copied ? "?" : "??")</span>
+                        <span class="btn-icon">@(copied ? "✓" : "📋")</span>
                         @(copied ? "Copied!" : "Copy Twitter/X Text")
                     </button>
                 </div>
@@ -111,7 +111,7 @@ else
 
 @code {
     [Parameter] public string Id { get; set; } = string.Empty;
-    
+
     private ArtistTool.Domain.Photograph? photo;
     private ArtistTool.Intelligence.CanvasPreviewResult? canvasPreview;
     private bool loading = true;
@@ -120,6 +120,7 @@ else
     protected override async Task OnParametersSetAsync()
     {
         loading = true;
+        StateHasChanged();
         try
         {
             photo = await Db.GetPhotographWithIdAsync(Id);
