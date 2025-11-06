@@ -1,3 +1,4 @@
+using ArtistTool;
 using ArtistTool.Components;
 using ArtistTool.Domain;
 using ArtistTool.Intelligence;
@@ -11,14 +12,35 @@ builder.AddServiceDefaults();
 builder.Services.AddRazorComponents()
     .AddInteractiveServerComponents();
 
-builder.Services.AddSingleton<PhotoIntelligenceService>();
+if (builder.Configuration["Options:UseAI"]?.ToLower() == "true")
+{
+    builder.Services.AddSingleton<PhotoIntelligenceService>();
+    
+    builder.Services.AddSingleton(new AIOptions
+    {
+        UseAI = true,
+        ShowMarketing = builder.Configuration["Options:MarketingMode"]?.ToLower() == "true"
+    });
 
-// Register database with proper async initialization
-builder.Services.AddSingleton<IPhotoDatabase, IntelligentPhotoDatabase>();
-builder.Services.AddSingleton<IAIClientProvider>(sp => new AzureOpenAIClientProvider(
-    builder.Configuration["AzureOpenAI:Endpoint"]!,
-    builder.Configuration["AzureOpenAI:ConversationalDeployment"]!,
-    builder.Configuration["AzureOpenAI:VisionDeployment"]!));
+    // Register database with proper async initialization
+    builder.Services.AddSingleton<IPhotoDatabase, IntelligentPhotoDatabase>();
+    builder.Services.AddSingleton<IAIClientProvider>(sp => new AzureOpenAIClientProvider(
+        builder.Configuration["AzureOpenAI:Endpoint"]!,
+        builder.Configuration["AzureOpenAI:ConversationalDeployment"]!,
+        builder.Configuration["AzureOpenAI:VisionDeployment"]!,
+        builder.Configuration["AzureOpenAI:ImageDeployment"]!));
+}
+else
+{
+    // Register persistent database with proper async initialization
+    builder.Services.AddSingleton<IPhotoDatabase, PersistentPhotoDatabase>();
+    builder.Services.AddSingleton(new AIOptions
+    {
+        UseAI = false,
+        ShowMarketing = false
+    });
+}
+
 builder.Services.AddSingleton<IImageManager, ImageManager>();
 
 var app = builder.Build();

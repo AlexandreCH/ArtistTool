@@ -1,4 +1,5 @@
 @page "/photo/{Id}"
+@inject AIOptions Options
 @inject IPhotoDatabase Db
 @inject NavigationManager Navigation
 @rendermode InteractiveServer
@@ -60,7 +61,10 @@ else
                     <h1>@photo.Title</h1>
                     <div class="action-buttons">
                         <button type="button" class="btn-edit" @onclick="StartEdit">Edit</button>
-                        <button type="button" class="btn-market" @onclick="NavigateToMarket">🎨 Market This</button>
+                        @if (Options.ShowMarketing)
+                        {
+                            <button type="button" class="btn-market" @onclick="NavigateToMarket">🎨 Market This</button>
+                        }
                     </div>
                 </div>
                 @if (!string.IsNullOrWhiteSpace(photo.Description))
@@ -96,6 +100,7 @@ else
     bool loading = true;
     bool editing = false;
     bool saving = false;
+    bool marketNavigating = false;
 
     string editTitle = string.Empty;
     string editDescription = string.Empty;
@@ -195,3 +200,10 @@ else
         }
     }
 }
+
+public class AppSettings
+{
+    // Add properties as needed, for example:
+    public string SomeSetting { get; set; }
+}
+

@@ -116,11 +116,10 @@ else
     private ArtistTool.Intelligence.CanvasPreviewResult? canvasPreview;
     private bool loading = true;
     private bool copied = false;
+    private Task loadingTask = Task.CompletedTask;
 
-    protected override async Task OnParametersSetAsync()
+    private async Task LoadAsync()
     {
-        loading = true;
-        StateHasChanged();
         try
         {
             photo = await Db.GetPhotographWithIdAsync(Id);
@@ -137,6 +136,15 @@ else
         {
             loading = false;
         }
+        await InvokeAsync(StateHasChanged);
+    }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender) => await loadingTask;
+
+    protected override async Task OnParametersSetAsync()
+    {
+        loading = true;        
+        loadingTask = LoadAsync();
     }
 
     private async Task CopyTwitterText()
