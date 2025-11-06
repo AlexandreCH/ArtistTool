@@ -43,6 +43,7 @@ namespace ArtistTool.Intelligence
                     var analysis = await intelligenceService.AnalyzePhotoAsync(
                         photograph.Path,
                         photograph.FileName,
+                        photograph.ContentType,
                         string.IsNullOrWhiteSpace(photograph.Description) ? null : photograph.Description,
                         string.IsNullOrWhiteSpace(photograph.Title) ? null : photograph.Title,
                         availableCategories

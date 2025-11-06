@@ -6,5 +6,6 @@ namespace ArtistTool.Intelligence
     {
         IChatClient GetConversationalClient();
         IChatClient GetVisionClient();
+        IImageGenerator GetImageClient();
     }
 }

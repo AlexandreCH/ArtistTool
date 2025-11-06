@@ -44,6 +44,32 @@ app.MapGet("/images/{type}/{id}", async (string type, string id, IPhotoDatabase 
 {
     logger.LogDebug("Image request: type={Type}, id={Id}", type, id);
     
+    // Check if this is a canvas preview request
+    if (id.EndsWith("_canvas_preview"))
+    {
+        var photoId = id.Replace("_canvas_preview", "");
+        var photoForCanvas = await db.GetPhotographWithIdAsync(photoId);
+        if (photoForCanvas is null)
+        {
+            logger.LogWarning("Photo not found for canvas preview: id={Id}", photoId);
+            return Results.NotFound();
+        }
+        
+        var canvasPreviewPath = Path.Combine(
+            Path.GetDirectoryName(photoForCanvas.Path)!,
+            $"{photoId}_canvas_preview.png"
+        );
+        
+        if (File.Exists(canvasPreviewPath))
+        {
+            logger.LogDebug("Serving canvas preview from {Path}", canvasPreviewPath);
+            return Results.File(canvasPreviewPath, "image/png");
+        }
+        
+        logger.LogWarning("Canvas preview not found at {Path}", canvasPreviewPath);
+        return Results.NotFound();
+    }
+    
     var photo = await db.GetPhotographWithIdAsync(id);
     if (photo is null)
     {

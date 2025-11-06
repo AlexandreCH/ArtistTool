@@ -57,7 +57,10 @@ else
             {
                 <div class="view-mode">
                     <h1>@photo.Title</h1>
-                    <button type="button" class="btn-edit" @onclick="StartEdit">Edit</button>
+                    <div class="action-buttons">
+                        <button type="button" class="btn-edit" @onclick="StartEdit">Edit</button>
+                        <a href="/market/@photo.Id" class="btn-market">🎨 Market This</a>
+                    </div>
                 </div>
                 @if (!string.IsNullOrWhiteSpace(photo.Description))
                 {

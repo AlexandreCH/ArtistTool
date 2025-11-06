@@ -11,6 +11,15 @@ A Blazor Server application for managing and organizing photographs with **AI-po
 - **Category Mapping**: Intelligently assigns photos to existing categories
 - **Secure Authentication**: Uses Azure Managed Identity (no API keys required!)
 
+### ?? AI-Powered Marketing & E-Commerce
+- **Canvas Visualization**: AI generates photorealistic canvas print previews from photos
+- **Market Research Pricing**: AI determines competitive starting prices for fine art prints
+- **Marketing Copy Generation**: Professional product descriptions (2-3 paragraphs)
+- **Attention-Grabbing Headlines**: AI-crafted 5-10 word headlines for maximum impact
+- **Social Media Ready**: Twitter/X posts with hashtags (<280 chars) - one-click copy
+- **Product Showcase Page**: Professional e-commerce layout with pricing and CTAs
+- **"Market This" Feature**: Direct link from photo details to marketing preview
+
 ### ?? Photo Management
 - **Batch Upload**: Upload up to 10 files simultaneously (20MB each)
 - **Supported Formats**: JPG, JPEG, PNG, GIF, TIF, TIFF
@@ -268,14 +277,43 @@ ArtistTool/
 4. Click **Save** to persist changes
 5. Click **Cancel** to discard changes
 
+### Marketing Canvas Previews
+
+1. Open photo detail page
+2. Click **?? Market This** button
+3. AI generates (8-13 seconds):
+   - Photorealistic canvas visualization
+   - Market-researched pricing
+   - Professional headline
+   - 2-3 paragraph marketing copy
+   - Twitter/X post with hashtags
+4. Review the product showcase page
+5. Click **Copy Twitter Text** to share on social media
+6. Use generated content for marketing materials
+
+**Features:**
+- Professional e-commerce product layout
+- Canvas preview showing 3D depth and gallery wrap
+- Competitive pricing based on market analysis
+- Ready-to-use marketing content
+- Social media copy optimized for engagement
+
 ## Architecture
 
 ### AI Integration
 
 - **IntelligentPhotoDatabase**: Decorator pattern wrapping PersistentPhotoDatabase
 - **PhotoIntelligenceService**: Core AI analysis logic with retry mechanisms
+  - `AnalyzePhotoAsync`: Auto-generates titles, descriptions, tags, categories
+  - `GenerateCanvasPreviewAsync`: Creates marketing materials and canvas visualizations
+  - Canvas visualization with AI image generation
+  - Market research for competitive pricing
+  - Professional headline and copy generation
+  - Social media content optimization
 - **AzureOpenAIClientProvider**: Manages Azure OpenAI clients with Managed Identity
 - **OpenAIChatClientAdapter**: Bridges Azure OpenAI SDK to Microsoft.Extensions.AI interface
+- **IChatClient**: Supports both text and image generation (GPT-4o)
+- **Marketing Page** (`/market/{id}`): Professional product showcase with AI-generated content
 
 ### Persistence Layer
 
@@ -310,7 +348,10 @@ ArtistTool/
 - **Vision analysis**: 2-5 seconds (image description)
 - **Title generation**: ~1 second
 - **Tag/category generation**: ~2 seconds
-- **Total enrichment**: 5-10 seconds per photo
+- **Canvas visualization**: 3-5 seconds (image generation)
+- **Marketing content**: 2-3 seconds (pricing, headline, copy, Twitter)
+- **Total photo enrichment**: 5-10 seconds per photo (upload)
+- **Total marketing preview**: 8-13 seconds per photo (on-demand)
 
 ### Optimization Tips
 - Consider background job processing for bulk uploads
@@ -323,7 +364,9 @@ ArtistTool/
 Using Azure OpenAI GPT-4o (approximate costs as of 2025):
 - **Vision analysis**: $0.01-0.02 per image
 - **Text generation**: $0.001-0.002 per photo
-- **Estimated total**: $0.01-0.03 per AI-enriched photo
+- **Image generation (canvas preview)**: $0.02-0.04 per image
+- **Estimated photo enrichment**: $0.01-0.03 per photo
+- **Estimated marketing preview**: $0.03-0.06 per canvas visualization
 - **Managed Identity**: No additional cost
 
 ## Troubleshooting

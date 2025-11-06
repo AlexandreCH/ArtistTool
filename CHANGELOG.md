@@ -8,6 +8,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
+- **AI-Powered Marketing & Canvas Preview** (`/market/{id}` page)
+  - Canvas visualization generation using AI image generation
+  - AI-powered market research for competitive pricing
+  - Automatic headline creation (5-10 word attention-grabbers)
+  - Professional marketing copy generation (2-3 paragraphs)
+  - Twitter/X post generation with hashtags (<280 chars)
+  - One-click Twitter text copy to clipboard
+  - Professional e-commerce product showcase layout
+  - Disabled "Buy Now" and "Add to Cart" buttons (ready for future integration)
+  - "Market This" button on photo detail page
+  - Enhanced visual design with gradient backgrounds and improved contrast
+  - Responsive design for mobile and tablet
 - **AI-Powered Photo Analysis** using Azure OpenAI with Managed Identity
   - Automatic image description generation using GPT-4o vision model
   - Intelligent title generation from image content and filename
@@ -16,6 +28,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - IntelligentPhotoDatabase wrapper for AI enrichment
   - PhotoIntelligenceService for AI operations
   - AzureOpenAIClientProvider with DefaultAzureCredential support
+  - Image generation capabilities through IChatClient for canvas previews
 - **Photo Detail Page** (`/photo/{id}`)
   - Full-screen photo viewing
   - Title and description display
@@ -108,7 +121,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Vision analysis: ~2-5 seconds per image
 - Title generation: ~1 second per photo
 - Tag/category generation: ~2 seconds per photo
-- Total AI enrichment time: 5-10 seconds per photo
+- Canvas visualization generation: ~3-5 seconds per image
+- Marketing content generation: ~2-3 seconds per photo
+- Total AI enrichment time: 5-10 seconds per photo (upload)
+- Total marketing preview generation: 8-13 seconds per photo
 - Optimized file operations with proper disposal patterns
 
 ## [0.1.0] - 2025-01-XX

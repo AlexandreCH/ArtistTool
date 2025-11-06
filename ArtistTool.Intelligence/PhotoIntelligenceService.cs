@@ -1,7 +1,6 @@
 using ArtistTool.Domain;
 using Microsoft.Extensions.AI;
 using Microsoft.Extensions.Logging;
-using System.Text.Json;
 
 namespace ArtistTool.Intelligence
 {
@@ -10,6 +9,7 @@ namespace ArtistTool.Intelligence
         public async Task<PhotoAnalysisResult> AnalyzePhotoAsync(
             string imagePath, 
             string fileName, 
+            string contentType,
             string? existingDescription = null, 
             string? existingTitle = null, IEnumerable<Category>? availableCategories = null)
         {
@@ -27,7 +27,7 @@ namespace ArtistTool.Intelligence
                 // Step 1: Generate description if not provided
                 if (string.IsNullOrWhiteSpace(result.Description))
                 {
-                    result.Description = await GenerateDescriptionAsync(imagePath, fileName);
+                    result.Description = await GenerateDescriptionAsync(imagePath, contentType, fileName);
                     logger.LogDebug("Generated description: {Description}", result.Description);
                 }
 
@@ -55,7 +55,141 @@ namespace ArtistTool.Intelligence
             return result;
         }
 
-        private async Task<string> GenerateDescriptionAsync(string imagePath, string fileName)
+        public async Task<CanvasPreviewResult> GenerateCanvasPreviewAsync(Photograph photo)
+        {
+            logger.LogInformation("Generating canvas preview for photo: {PhotoId} - {Title}", photo.Id, photo.Title);
+
+            try
+            {
+                // Step 1: Generate canvas preview visualization
+                var canvasPreviewPath = await GenerateCanvasVisualizationAsync(photo);
+                logger.LogDebug("Generated canvas preview at {Path}", canvasPreviewPath);
+
+                // Step 2: Generate marketing content (price, headline, copy, twitter)
+                var marketingContent = await GenerateMarketingContentAsync(photo);
+                logger.LogDebug("Generated marketing content: Headline='{Headline}', Price=${Price}", 
+                    marketingContent.Headline, marketingContent.Price);
+
+                return new CanvasPreviewResult
+                {
+                    PhotoId = photo.Id,
+                    PathToCanvasPreview = canvasPreviewPath,
+                    Headline = marketingContent.Headline,
+                    MarketingCopy = marketingContent.MarketingCopy,
+                    TwitterText = marketingContent.TwitterText,
+                    Price = marketingContent.Price
+                };
+            }
+            catch (Exception ex)
+            {
+                logger.LogError(ex, "Failed to generate canvas preview for photo {PhotoId}", photo.Id);
+                throw;
+            }
+        }
+
+        private async Task<string> GenerateCanvasVisualizationAsync(Photograph photo)
+        {
+            logger.LogDebug("Generating canvas visualization image for {PhotoId}", photo.Id);
+
+            // Step 1: Retrieve the original image
+            byte[] imageBytes;
+            using (var fs = new FileStream(photo.Path, FileMode.Open, FileAccess.Read, FileShare.Read))
+            using (var ms = new MemoryStream())
+            {
+                await fs.CopyToAsync(ms);
+                imageBytes = ms.ToArray();
+            }
+
+            var imageContent = new DataContent(imageBytes, photo.ContentType);
+
+            var canvasPrompt = "Transform the image into a photorealistic visualization of a fine art photograph displayed as a gallery-wrapped canvas print on a white wall, viewed from a 45-degree angle showing the depth and wrapped edges of the canvas.";
+            
+            logger.LogDebug("Generated canvas visualization prompt: {Prompt}", canvasPrompt);
+
+            // Step 2: Generate the actual canvas visualization image
+            var imageClient = aiClientProvider.GetImageClient();
+            
+            logger.LogInformation("Requesting image generation for canvas preview...");
+            var imageGenRequest = new ImageGenerationRequest
+            {
+              OriginalImages = [imageContent],
+              Prompt = canvasPrompt 
+            };
+            
+            var imageGenResponse = await imageClient.GenerateAsync(imageGenRequest);
+
+            // Extract generated image from response
+            var generatedImageContent = imageGenResponse.Contents
+                .OfType<DataContent>()
+                .FirstOrDefault();
+
+            if (generatedImageContent?.Data != null)
+            {
+                // Save the generated canvas preview image
+                var previewPath = Path.Combine(
+                    Path.GetDirectoryName(photo.Path)!,
+                    $"{photo.Id}_canvas_preview.png"
+                );
+
+                await File.WriteAllBytesAsync(previewPath, generatedImageContent.Data);
+                
+                logger.LogInformation("Canvas visualization image saved to {Path} ({Size} bytes)", 
+                    previewPath, generatedImageContent.Data.Length);
+                
+                return previewPath;
+            }
+            else
+            {
+                // Fallback: save the prompt if image generation isn't available
+                logger.LogWarning("Image generation response did not contain image data. Saving prompt instead.");
+                
+                var promptPath = Path.Combine(
+                    Path.GetDirectoryName(photo.Path)!,
+                    $"{photo.Id}_canvas_prompt.txt"
+                );
+                
+                var fallbackContent = $"Canvas Visualization Prompt:\n{canvasPrompt}\n\nResponse Text:\n{imageGenResponse.Contents.OfType<TextContent>().FirstOrDefault()?.Text}";
+                await File.WriteAllTextAsync(promptPath, fallbackContent);
+                
+                logger.LogInformation("Canvas visualization prompt saved to {Path}. Configure image generation in Azure OpenAI to generate actual images.", promptPath);
+                
+                return promptPath;
+            }
+        }
+
+        private async Task<MarketingContent> GenerateMarketingContentAsync(Photograph photo)
+        {
+            logger.LogDebug("Generating marketing content for {PhotoId} - {Title}", photo.Id, photo.Title);
+
+            var conversationalClient = aiClientProvider.GetConversationalClient();
+
+            var prompt = $@"You are a marketing expert for fine art photography prints. Generate compelling marketing content for this canvas print.
+
+Photo Details:
+- Title: {photo.Title}
+- Description: {photo.Description}
+- Tags: {string.Join(", ", photo.Tags)}
+- Categories: {string.Join(", ", photo.Categories)}
+
+Tasks:
+1. Research typical pricing for similar fine art canvas prints and suggest a competitive starting price in USD (consider size, subject matter, artistic value)
+2. Create an attention-grabbing headline (5-10 words) that would make someone want to buy this print
+3. Write compelling marketing copy (2-3 paragraphs) for a product page that highlights the artistic value, emotional impact, and how it would enhance a space
+4. Create a Twitter/X post (under 280 characters) with 2-3 relevant hashtags to drive traffic to the product page
+
+Make the content professional, compelling, and focused on the emotional and aesthetic value of the artwork.";
+
+            var messages = new List<ChatMessage>
+            {
+                new(ChatRole.System, "You are an expert marketing professional specializing in fine art photography sales. You understand pricing strategy, compelling copywriting, and social media engagement. Always respond with valid JSON only."),
+                new(ChatRole.User, prompt)
+            };
+
+            var response = await conversationalClient.GetResponseAsync<MarketingContent>(messages);
+            return response.Result;
+        }
+
+        private async Task<string> GenerateDescriptionAsync(string imagePath, string contentType, string fileName)
         {
             logger.LogDebug("Generating description from image for {FileName}", fileName);
             
@@ -87,7 +221,7 @@ namespace ArtistTool.Intelligence
                 }
             }
             
-            var imageContent = new ImageContent(imageBytes, "image/jpeg");
+            var imageContent = new DataContent(imageBytes, contentType);
 
             var messages = new List<ChatMessage>
             {
@@ -98,8 +232,8 @@ namespace ArtistTool.Intelligence
                 ])
             };
 
-            var response = await visionClient.CompleteAsync(messages);
-            return response.Message.Text ?? "No description available";
+            var response = await visionClient.GetResponseAsync(messages);
+            return response.Text ?? "No description available";
         }
 
         private async Task<string> GenerateTitleAsync(string fileName, string description)
@@ -121,8 +255,8 @@ Provide ONLY the title, nothing else. Make it artistic and evocative.";
                 new(ChatRole.User, prompt)
             };
 
-            var response = await conversationalClient.CompleteAsync(messages);
-            return response.Message.Text?.Trim().Trim('"') ?? Path.GetFileNameWithoutExtension(fileName);
+            var response = await conversationalClient.GetResponseAsync(messages);
+            return response.Text?.Trim().Trim('"') ?? Path.GetFileNameWithoutExtension(fileName);
         }
 
         private async Task<(List<string> tags, List<string> categories)> GenerateTagsAndCategoriesAsync(
@@ -133,9 +267,9 @@ Provide ONLY the title, nothing else. Make it artistic and evocative.";
             logger.LogDebug("Generating tags and categories for: {Title}", title);
             
             var conversationalClient = aiClientProvider.GetConversationalClient();
-            var categoryNames = availableCategories?.Select(c => c.Name).Where(n => n != "All").ToList() ?? new List<string>();
+            var categoryNames = availableCategories?.Select(c => c.Name).Where(n => n != "All").ToList() ?? [];
             
-            var categoriesSection = categoryNames.Any() 
+            var categoriesSection = categoryNames.Count != 0
                 ? $"Available categories (choose ONLY from these): {string.Join(", ", categoryNames)}" 
                 : "No predefined categories available.";
 
@@ -150,12 +284,6 @@ Generate:
 1. Tags: Create as many relevant tags as needed (5-15 tags). Include subjects, colors, moods, artistic styles, techniques, themes, etc.
 2. Categories: Select 1-3 most appropriate categories from the available list. If no categories fit well, return an empty list for categories.
 
-Return your response in this exact JSON format:
-{{
-  ""tags"": [""tag1"", ""tag2"", ""tag3""],
-  ""categories"": [""category1"", ""category2""]
-}}
-
 Important: 
 - Only use tags that are genuinely relevant
 - Only select categories that truly match from the available list
@@ -163,55 +291,22 @@ Important:
 
             var messages = new List<ChatMessage>
             {
-                new ChatMessage(ChatRole.System, "You are an expert at photo categorization and tagging. Generate accurate, relevant tags and select appropriate categories. Always respond with valid JSON only."),
-                new ChatMessage(ChatRole.User, prompt)
+                new(ChatRole.System, "You are an expert at photo categorization and tagging. Generate accurate, relevant tags and select appropriate categories. Always respond with valid JSON only."),
+                new(ChatRole.User, prompt)
             };
 
-            var response = await conversationalClient.CompleteAsync(messages);
-            var jsonResponse = response.Message.Text ?? "{}";
+            var response = await conversationalClient.GetResponseAsync<TagCategoryResponse>(messages);
+            var result = response.Result;
             
-            // Clean up markdown code blocks if present
-            jsonResponse = jsonResponse.Trim();
-            if (jsonResponse.StartsWith("```json"))
-            {
-                jsonResponse = jsonResponse.Substring(7);
-            }
-            if (jsonResponse.StartsWith("```"))
-            {
-                jsonResponse = jsonResponse.Substring(3);
-            }
-            if (jsonResponse.EndsWith("```"))
-            {
-                jsonResponse = jsonResponse.Substring(0, jsonResponse.Length - 3);
-            }
-            jsonResponse = jsonResponse.Trim();
-
-            try
-            {
-                var result = JsonSerializer.Deserialize<TagCategoryResponse>(jsonResponse, new JsonSerializerOptions 
-                { 
-                    PropertyNameCaseInsensitive = true 
-                });
-                
-                if (result != null)
-                {
-                    // Filter categories to only include valid ones
-                    var validCategories = result.Categories
-                        ?.Where(c => categoryNames.Contains(c, StringComparer.OrdinalIgnoreCase))
-                        .ToList() ?? new List<string>();
+            // Filter categories to only include valid ones
+            var validCategories = result.Categories
+                ?.Where(c => categoryNames.Contains(c, StringComparer.OrdinalIgnoreCase))
+                .ToList() ?? [];
                     
-                    logger.LogDebug("Generated {TagCount} tags and {CategoryCount} categories", 
-                        result.Tags?.Count ?? 0, validCategories.Count);
+            logger.LogDebug("Generated {TagCount} tags and {CategoryCount} categories", 
+                result.Tags?.Count ?? 0, validCategories.Count);
                     
-                    return (result.Tags ?? new List<string>(), validCategories);
-                }
-            }
-            catch (JsonException ex)
-            {
-                logger.LogWarning(ex, "Failed to parse AI response as JSON: {Response}", jsonResponse);
-            }
-
-            return (new List<string>(), new List<string>());
+            return (result.Tags ?? [], validCategories);
         }
 
         private class TagCategoryResponse
@@ -219,6 +314,32 @@ Important:
             public List<string>? Tags { get; set; }
             public List<string>? Categories { get; set; }
         }
+
+        private class MarketingContentResponse
+        {
+            public decimal? Price { get; set; }
+            public string? Headline { get; set; }
+            public string? MarketingCopy { get; set; }
+            public string? TwitterText { get; set; }
+        }
+
+        private class MarketingContent
+        {
+            public decimal Price { get; set; }
+            public string Headline { get; set; } = string.Empty;
+            public string MarketingCopy { get; set; } = string.Empty;
+            public string TwitterText { get; set; } = string.Empty;
+        }
+    }
+
+    public class CanvasPreviewResult
+    {
+        public string PhotoId { get; set; } = string.Empty;
+        public string PathToCanvasPreview { get; set; } = string.Empty;
+        public string Headline {  get; set; } = string.Empty;
+        public string MarketingCopy { get; set; } = string.Empty;
+        public string TwitterText { get; set; } = string.Empty;
+        public decimal Price { get; set; } = 0;
     }
 
     public class PhotoAnalysisResult

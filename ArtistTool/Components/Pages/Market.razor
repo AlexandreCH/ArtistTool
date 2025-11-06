@@ -1,0 +1,152 @@
+@page "/market/{Id}"
+@inject ArtistTool.Domain.IPhotoDatabase Db
+@inject ArtistTool.Intelligence.PhotoIntelligenceService IntelligenceService
+@inject IJSRuntime JS
+@rendermode InteractiveServer
+
+<PageTitle>Market - @(photo?.Title ?? "Loading...")</PageTitle>
+
+@if (loading)
+{
+    <div class="loading-container">
+        <div class="spinner"></div>
+        <p>Generating marketing preview...</p>
+    </div>
+}
+else if (canvasPreview == null || photo == null)
+{
+    <div class="error-container">
+        <h2>Unable to generate marketing preview</h2>
+        <p>Please try again or return to the <a href="/photo/@Id">photo details</a>.</p>
+    </div>
+}
+else
+{
+    <div class="market-page">
+        <div class="market-header">
+            <a href="/photo/@Id" class="back-link">? Back to Photo Details</a>
+            <h1>Marketing Preview</h1>
+        </div>
+
+        <div class="product-showcase">
+            <div class="product-image-section">
+                <div class="canvas-preview">
+                    @if (File.Exists(canvasPreview.PathToCanvasPreview) && 
+                         (canvasPreview.PathToCanvasPreview.EndsWith(".png") || 
+                          canvasPreview.PathToCanvasPreview.EndsWith(".jpg")))
+                    {
+                        <img src="/images/full/@($"{photo.Id}_canvas_preview")" alt="Canvas Preview" />
+                    }
+                    else
+                    {
+                        <div class="preview-placeholder">
+                            <p>Canvas visualization preview</p>
+                            <small>Image generation in progress or not available</small>
+                        </div>
+                    }
+                </div>
+            </div>
+
+            <div class="product-details-section">
+                <div class="product-header">
+                    <h2 class="product-headline">@canvasPreview.Headline</h2>
+                    <div class="price-section">
+                        <span class="price-label">Starting at</span>
+                        <span class="price">$@canvasPreview.Price.ToString("N2")</span>
+                    </div>
+                </div>
+
+                <div class="product-description">
+                    @foreach (var paragraph in canvasPreview.MarketingCopy.Split("\n\n"))
+                    {
+                        <p>@paragraph</p>
+                    }
+                </div>
+
+                <div class="product-meta">
+                    <div class="meta-item">
+                        <strong>Title:</strong> @photo.Title
+                    </div>
+                    @if (photo.Tags.Length > 0)
+                    {
+                        <div class="meta-item">
+                            <strong>Style:</strong> @string.Join(", ", photo.Tags.Take(3))
+                        </div>
+                    }
+                    @if (photo.Categories.Length > 0)
+                    {
+                        <div class="meta-item">
+                            <strong>Category:</strong> @string.Join(", ", photo.Categories.Where(c => c != "All"))
+                        </div>
+                    }
+                </div>
+
+                <div class="action-buttons">
+                    <button class="btn-buy" disabled>
+                        <span class="btn-icon">??</span>
+                        Buy Now (Coming Soon)
+                    </button>
+                    <button class="btn-add-cart" disabled>
+                        Add to Cart
+                    </button>
+                </div>
+
+                <div class="social-section">
+                    <h3>Share on Social Media</h3>
+                    <div class="twitter-preview">
+                        <div class="twitter-icon">??</div>
+                        <div class="twitter-content">
+                            <p>@canvasPreview.TwitterText</p>
+                        </div>
+                    </div>
+                    <button class="btn-copy-twitter" @onclick="CopyTwitterText">
+                        <span class="btn-icon">@(copied ? "?" : "??")</span>
+                        @(copied ? "Copied!" : "Copy Twitter/X Text")
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+}
+
+@code {
+    [Parameter] public string Id { get; set; } = string.Empty;
+    
+    private ArtistTool.Domain.Photograph? photo;
+    private ArtistTool.Intelligence.CanvasPreviewResult? canvasPreview;
+    private bool loading = true;
+    private bool copied = false;
+
+    protected override async Task OnParametersSetAsync()
+    {
+        loading = true;
+        try
+        {
+            photo = await Db.GetPhotographWithIdAsync(Id);
+            if (photo != null)
+            {
+                canvasPreview = await IntelligenceService.GenerateCanvasPreviewAsync(photo);
+            }
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error generating canvas preview: {ex.Message}");
+        }
+        finally
+        {
+            loading = false;
+        }
+    }
+
+    private async Task CopyTwitterText()
+    {
+        if (canvasPreview != null && !string.IsNullOrWhiteSpace(canvasPreview.TwitterText))
+        {
+            await JS.InvokeVoidAsync("navigator.clipboard.writeText", canvasPreview.TwitterText);
+            copied = true;
+            await Task.Delay(2000);
+            copied = false;
+            StateHasChanged();
+        }
+    }
+}
