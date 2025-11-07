@@ -55,13 +55,18 @@ public static class Extensions
         builder.Services.AddOpenTelemetry()
             .WithMetrics(metrics =>
             {
-                metrics.AddAspNetCoreInstrumentation()
+                metrics.AddAspNetCoreInstrumentation()                    
                     .AddHttpClientInstrumentation()
                     .AddRuntimeInstrumentation();
             })
             .WithTracing(tracing =>
             {
                 tracing.AddSource(builder.Environment.ApplicationName)
+                    // Add Microsoft.Extensions.AI telemetry - the actual source used by the library
+                    .AddSource("Microsoft.Extensions.AI")
+                    // Add custom AI agent trace sources (if we create any custom spans)
+                    .AddSource("ArtistTool.Intelligence.conversational")
+                    .AddSource("ArtistTool.Intelligence.vision")
                     .AddAspNetCoreInstrumentation(tracing =>
                         // Exclude health check requests from tracing
                         tracing.Filter = context =>

@@ -86,12 +86,13 @@ namespace ArtistTool.Intelligence
             }
 
             // Add OpenTelemetry tracing and metrics
-            // This will automatically integrate with the app's OpenTelemetry configuration
+            // Note: The sourceName parameter in UseOpenTelemetry may not actually create activities under that name
+            // Microsoft.Extensions.AI uses its own internal activity source
+            // We keep this for configuration purposes, but the actual traces will appear under "Microsoft.Extensions.AI"
             builder.UseOpenTelemetry(
-                sourceName: $"ArtistTool.Intelligence.{clientName}",
                 configure: options =>
                 {
-                    // Enable detailed telemetry
+                    // Enable detailed telemetry including prompts and responses in dev
                     options.EnableSensitiveData = true; // Set to false in prod to protect PII 
                 });
 
