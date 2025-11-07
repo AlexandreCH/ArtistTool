@@ -1,6 +1,7 @@
 using Azure.AI.OpenAI;
 using Azure.Identity;
 using Microsoft.Extensions.AI;
+using Microsoft.Extensions.Logging;
 
 namespace ArtistTool.Intelligence
 {
@@ -12,15 +13,19 @@ namespace ArtistTool.Intelligence
 
         /// <summary>
         /// Creates an Azure OpenAI client provider using Managed Identity (DefaultAzureCredential)
+        /// with logging and OpenTelemetry support
         /// </summary>
         /// <param name="endpoint">Azure OpenAI endpoint URL (e.g., https://your-resource.openai.azure.com/)</param>
         /// <param name="conversationalDeployment">Deployment name for conversational model (e.g., gpt-4o)</param>
         /// <param name="visionDeployment">Deployment name for vision model (e.g., gpt-4o)</param>
+        /// <param name="imageDeployment">Deployment name for image model (e.g., gpt-image-1)</param>
+        /// <param name="loggerFactory">Optional logger factory for enabling logging on chat clients</param>
         public AzureOpenAIClientProvider(
             string endpoint, 
             string conversationalDeployment = "gpt-4o", 
             string visionDeployment = "gpt-4o",
-            string imageDeployment = "gpt-image-1")
+            string imageDeployment = "gpt-image-1",
+            ILoggerFactory? loggerFactory = null)
         {
             if (string.IsNullOrWhiteSpace(endpoint))
             {
@@ -48,16 +53,53 @@ namespace ArtistTool.Intelligence
             
             var azureClient = new AzureOpenAIClient(new Uri(endpoint), credential);
 
-            // Get ChatClient instances from Azure OpenAI
+            // Get ChatClient instances from Azure OpenAI and enhance with logging & telemetry
             var conversationalChatClient = azureClient.GetChatClient(conversationalDeployment);
             var visionChatClient = azureClient.GetChatClient(visionDeployment);
             var imageClient = azureClient.GetImageClient(imageDeployment);
+
+            // Build enhanced clients with logging and OpenTelemetry using ChatClientBuilder
+            _conversationalClient = BuildEnhancedChatClient(
+                conversationalChatClient.AsIChatClient(), 
+                "conversational", 
+                loggerFactory);
             
-            // Wrap with adapter
-            _conversationalClient = conversationalChatClient.AsIChatClient();
-            _visionClient = visionChatClient.AsIChatClient();
+            _visionClient = BuildEnhancedChatClient(
+                visionChatClient.AsIChatClient(), 
+                "vision", 
+                loggerFactory);
+            
             _imageClient = imageClient.AsIImageGenerator();
-        }        
+        }
+
+        private static IChatClient BuildEnhancedChatClient(
+            IChatClient innerClient, 
+            string clientName, 
+            ILoggerFactory? loggerFactory)
+        {
+            var builder = new ChatClientBuilder(innerClient);
+
+            // Add logging if logger factory is provided
+            if (loggerFactory is not null)
+            {
+                builder.UseLogging(loggerFactory);
+            }
+
+            // Add OpenTelemetry tracing and metrics
+            // This will automatically integrate with the app's OpenTelemetry configuration
+            builder.UseOpenTelemetry(
+                sourceName: $"ArtistTool.Intelligence.{clientName}",
+                configure: options =>
+                {
+                    // Enable detailed telemetry
+                    options.EnableSensitiveData = true; // Set to false in prod to protect PII 
+                });
+
+            // Add function invocation capability (for potential future tool use)
+            builder.UseFunctionInvocation();
+
+            return builder.Build();
+        }
 
         public IChatClient GetConversationalClient() => _conversationalClient;
 

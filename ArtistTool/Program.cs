@@ -28,7 +28,8 @@ if (builder.Configuration["Options:UseAI"]?.ToLower() == "true")
         builder.Configuration["AzureOpenAI:Endpoint"]!,
         builder.Configuration["AzureOpenAI:ConversationalDeployment"]!,
         builder.Configuration["AzureOpenAI:VisionDeployment"]!,
-        builder.Configuration["AzureOpenAI:ImageDeployment"]!));
+        builder.Configuration["AzureOpenAI:ImageDeployment"]!,
+        sp.GetRequiredService<ILoggerFactory>()));
 }
 else
 {
