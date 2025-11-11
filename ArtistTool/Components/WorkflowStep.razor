@@ -1,8 +1,9 @@
 ﻿<div class="result-tile">
-    <p><strong>@Name</strong></p>
+    <div class="result-title"><strong>@Name</strong></div>
     @if (!IsStarted && !IsFinished)
     {
         <div class="loading-container">
+            <div class="spinner"></div>
             <p class="alert alert-danger">Waiting for the workflow...</p>
         </div>
     }
@@ -10,6 +11,7 @@
     @if (IsStarted && !IsFinished)
     {
         <div class="loading-container">
+            <div class="spinner"></div>
             <p class="alert alert-warning">The agent is working...</p>
         </div>
 

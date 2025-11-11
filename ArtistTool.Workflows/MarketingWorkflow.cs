@@ -104,6 +104,8 @@ namespace ArtistTool.Workflows
             builder.BindExecutor(writer);
             builder.AddFanInEdge(fanIn, writer);
 
+            _context.FanInNodes = fanIn.Count;
+
             _workflow = builder.Build();
             _context.WorkflowDiagram = _workflow.ToMermaidString();
 

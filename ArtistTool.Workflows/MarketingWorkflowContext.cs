@@ -12,13 +12,13 @@ namespace ArtistTool.Workflows
 
         public string BaseDirectory => _baseDirectory;
 
+        public int FanInNodes { get; set; }
+
         private WorkflowNode<CritiqueResponse> _critique = new();
         
         private Dictionary<string, WorkflowNode<MediumPreviewResponse>> _mediumPreviews = [];
 
         private List<WorkflowNode<ResearchResponse>> _researchNodes = [];
-
-        private Dictionary<string, string> _research = [];
 
         private IImageRegistry imageRegistry = new ImageRegistry();
         

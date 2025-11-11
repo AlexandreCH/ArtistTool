@@ -78,7 +78,12 @@ else
         {
             _context = await Controller.GetOrStartMarketingWorkflowAsync(Id);
             timer = new Timer(5000);
-            timer.Elapsed += (s, e) => InvokeAsync(StateHasChanged);
+            timer.Elapsed += (s, e) => InvokeAsync(() =>
+        {
+            timer.Stop();
+            timer.Dispose();
+            Navigate.NavigateTo(Navigate.Uri, forceLoad: true);
+        });
             timer.Start(); 
         }
     }

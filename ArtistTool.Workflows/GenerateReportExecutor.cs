@@ -15,13 +15,17 @@ public ValueTask<MarketingWorkflowContext> HandleAsync(MarketingWorkflowContext 
         {
             Interlocked.Increment(ref received);
 
-            logger.LogInformation("Fan-in to report generator, iteration: {iteration}", received);
+            logger.LogInformation("Fan-in to report generator, iteration: {iteration} if {total}", received, message.FanInNodes);
 
-            if (received < message.Research.Length)
+            if (received < message.FanInNodes)
             {
                 logger.LogInformation("Waiting for additional nodes to report in.");
                 return ValueTask.FromResult(message);
             }
+
+            var mermaidPath = Path.Combine(message.BaseDirectory, "workflow.md");
+            var mermaid = $"# Workflow diagram\r\n\r\n```mermaid\r\n{message.WorkflowDiagram}\r\n```\r\n";
+            File.WriteAllText(mermaidPath, mermaid);
 
             var templateCss = Path.Combine(AppContext.BaseDirectory, "index.css");
             var targetCss = Path.Combine(message.BaseDirectory, "index.css");

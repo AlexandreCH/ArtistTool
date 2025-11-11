@@ -1,18 +1,10 @@
-﻿.results-grid {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 1.75rem;
-    padding: 1.25rem;
-    justify-content: flex-start;
-}
-
-.result-tile {
+﻿.result-tile {
     position: relative;
     border: 1px solid rgba(148, 163, 184, 0.35);
     border-radius: 22px;
     overflow: hidden;
-    width: 240px;
-    height: 12  0px;
+    width: 360px;
+    height: 360px;
     display: flex;
     align-items: center;
     justify-content: center;
@@ -23,3 +15,16 @@
     color: inherit;
 }
 
+.result-title {
+    position: absolute;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    padding: 10px 12px;
+    font-size: 0.95rem;
+    font-weight: 600;
+    background: linear-gradient(to top, rgba(15, 23, 42, 0.55), rgba(15, 23, 42, 0.15));
+    color: #f8fafc;
+    z-index: 1;
+    backdrop-filter: blur(2px);
+}
