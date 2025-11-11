@@ -3,7 +3,6 @@ using Microsoft.AspNetCore.Diagnostics.HealthChecks;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Diagnostics.HealthChecks;
 using Microsoft.Extensions.Logging;
-using Microsoft.Extensions.ServiceDiscovery;
 using OpenTelemetry;
 using OpenTelemetry.Metrics;
 using OpenTelemetry.Trace;
@@ -47,7 +46,7 @@ public static class Extensions
     public static TBuilder ConfigureOpenTelemetry<TBuilder>(this TBuilder builder) where TBuilder : IHostApplicationBuilder
     {
         builder.Logging.AddOpenTelemetry(logging =>
-        {
+        { 
             logging.IncludeFormattedMessage = true;
             logging.IncludeScopes = true;
         });
@@ -63,16 +62,22 @@ public static class Extensions
             {
                 tracing.AddSource(builder.Environment.ApplicationName)
                     // Add Microsoft.Extensions.AI telemetry - the actual source used by the library
-                    .AddSource("Microsoft.Extensions.AI")
+                    .AddSource("Microsoft.Extensions.AI.*")
+                    //.AddSource("Microsoft.Extensions.AI.LoggingChatClient")
                     // Add custom AI agent trace sources (if we create any custom spans)
                     .AddSource("ArtistTool.Intelligence.conversational")
                     .AddSource("ArtistTool.Intelligence.vision")
+
+                    // Set sampler to record all traces to ensure AI prompts/responses are captured
+                    // By default, this captures all traces including sensitive AI data when EnableSensitiveData is true
+                    .SetSampler(new AlwaysOnSampler())
                     .AddAspNetCoreInstrumentation(tracing =>
+                    {
                         // Exclude health check requests from tracing
                         tracing.Filter = context =>
-                            !context.Request.Path.StartsWithSegments(HealthEndpointPath)
-                            && !context.Request.Path.StartsWithSegments(AlivenessEndpointPath)
-                    )
+                                !context.Request.Path.StartsWithSegments(HealthEndpointPath)
+                                && !context.Request.Path.StartsWithSegments(AlivenessEndpointPath);
+                    })
                     // Uncomment the following line to enable gRPC instrumentation (requires the OpenTelemetry.Instrumentation.GrpcNetClient package)
                     //.AddGrpcClientInstrumentation()
                     .AddHttpClientInstrumentation();

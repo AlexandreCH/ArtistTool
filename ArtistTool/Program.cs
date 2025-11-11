@@ -3,6 +3,7 @@ using ArtistTool.Components;
 using ArtistTool.Domain;
 using ArtistTool.Intelligence;
 using ArtistTool.Services;
+using ArtistTool.Workflows;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -12,53 +13,62 @@ builder.AddServiceDefaults();
 builder.Services.AddRazorComponents()
     .AddInteractiveServerComponents();
 
-if (builder.Configuration["Options:UseAI"]?.ToLower() == "true")
-{
-    builder.Services.AddSingleton<PhotoIntelligenceService>();
-    
+var useAI = builder.Configuration["Options:UseAI"]?.ToLower() == "true";
+var useWorkflows = builder.Configuration["Options:UseWorkflows"]?.ToLower() == "true";
+
+if (useAI)
+{ 
     builder.Services.AddSingleton(new AIOptions
     {
         UseAI = true,
-        ShowMarketing = builder.Configuration["Options:MarketingMode"]?.ToLower() == "true"
+        ShowMarketing = builder.Configuration["Options:MarketingMode"]?.ToLower() == "true",
+        UseWorkflows = useWorkflows
     });
 
-    // Register database with proper async initialization
-    builder.Services.AddSingleton<IPhotoDatabase, IntelligentPhotoDatabase>();
-    builder.Services.AddSingleton<IAIClientProvider>(sp => new AzureOpenAIClientProvider(
-        builder.Configuration["AzureOpenAI:Endpoint"]!,
-        builder.Configuration["AzureOpenAI:ConversationalDeployment"]!,
-        builder.Configuration["AzureOpenAI:VisionDeployment"]!,
-        builder.Configuration["AzureOpenAI:ImageDeployment"]!,
-        sp.GetRequiredService<ILoggerFactory>()));
+    builder.Services.AddIntelligenceServices(key => builder.Configuration[key] ?? string.Empty);
+    
+    // Add workflow services if enabled
+    if (useWorkflows)
+    {
+        builder.Services.AddWorkflowServices();
+    }
 }
 else
 {
-    // Register persistent database with proper async initialization
-    builder.Services.AddSingleton<IPhotoDatabase, PersistentPhotoDatabase>();
     builder.Services.AddSingleton(new AIOptions
     {
         UseAI = false,
-        ShowMarketing = false
+        ShowMarketing = false,
+        UseWorkflows = false
     });
+    builder.Services.AddDomainServices();
 }
 
-builder.Services.AddSingleton<IImageManager, ImageManager>();
+builder.Services.AddServices();
 
 var app = builder.Build();
 
 var dbLogger = app.Services.GetRequiredService<ILogger<Program>>();
-var database = app.Services.GetRequiredService<IPhotoDatabase>();
-if (database is PersistentPhotoDatabase persistentDb)
+var database = app.Services.GetRequiredService<IPhotoDatabase>();    
+dbLogger.LogInformation("Initializing PhotoDatabase");
+await database.InitAsync(CancellationToken.None);
+dbLogger.LogInformation("PhotoDatabase initialized successfully");
+
+// Initialize workflows if enabled
+var aiOptions = app.Services.GetRequiredService<AIOptions>();
+if (aiOptions.UseWorkflows)
 {
-    dbLogger.LogInformation("Initializing PersistentPhotoDatabase");
-    await persistentDb.InitAsync();
-    dbLogger.LogInformation("PersistentPhotoDatabase initialized successfully");
-}
-else if (database is IntelligentPhotoDatabase intelligentDb)
-{
-    dbLogger.LogInformation("Initializing IntelligentPhotoDatabase");
-    await intelligentDb.InitAsync();
-    dbLogger.LogInformation("IntelligentPhotoDatabase initialized successfully");
+    dbLogger.LogInformation("Initializing AI Workflows");
+    try
+    {
+        await app.Services.InitializeAgentsAsync();
+        dbLogger.LogInformation("AI Workflows initialized successfully");
+    }
+    catch (Exception ex)
+    {
+        dbLogger.LogError(ex, "Failed to initialize AI Workflows");
+        // Don't fail the application startup, just log the error
+    }
 }
 
 app.MapDefaultEndpoints();

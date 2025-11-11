@@ -1,0 +1,85 @@
+﻿@page "/workflows/marketing/{Id}"
+@using System.ComponentModel
+@using System.Timers
+@inject NavigationManager Navigate
+@inject IMarketingWorkflowController Controller
+
+@if (_context is null)
+{
+    <div class="loading-container">
+        <div class="spinner"></div>
+        <p>Loading marketing workflow...</p>
+    </div>
+}
+else
+{
+    <p><strong>Marketing Workflow Status for @_context?.Photo?.Title</strong></p>
+    <div class="results-grid">
+        <PhotoTile Id="@_context?.Id" />
+        @if (_context?.Completed != true)
+        {
+            <p>The workflow is still running. This page will refresh every few seconds.</p>
+            <WorkflowStep Name="Marketing workflow"
+            IsStarted="true"
+            IsFinished="false" />
+            @if (_context is not null)
+            {
+                if (_context.Critique is not null)
+                {
+                    <WorkflowStep Name="Image critique"
+                    IsStarted="@_context.Critique.Started"
+                    IsFinished="@_context.Critique.Completed" />
+                }
+
+                @foreach (var medium in _context?.MediumPreviews ?? [])
+                {
+                    <WorkflowStep Name="@GetNameForMedium(medium.Key)"
+                    IsStarted="@medium.Value.Started"
+                    IsFinished="@medium.Value.Completed" />
+                }
+
+                @foreach (var research in _context?.Research ?? [])
+                {
+                    <WorkflowStep Name="@GetNameForResearch(research.Result!)"
+                    IsStarted="@research.Started"
+                    IsFinished="@research.Completed"/>
+                }
+            }
+        }
+        else
+        {
+            <p>The workflow is completed. View the results at <code>@_context.BaseDirectory</code></p>
+        }
+    </div>
+}
+
+@code {
+    private Timer? timer = null;
+
+    [Parameter]
+    public string Id { get; set; } = string.Empty;
+
+    private string GetNameForMedium(string medium) => $"Generate {medium} preview";
+
+    private string GetNameForResearch(ResearchResponse r) =>
+    $"Research for {r.Medium}: {r.Area} ({r.Topic})";
+
+    private MarketingWorkflowContext? _context;
+
+    protected override async Task OnParametersSetAsync()
+    {
+        if (Id is null)
+        {
+            _context = null;
+            return;
+        }
+
+        if (_context is null)
+        {
+            _context = await Controller.GetOrStartMarketingWorkflowAsync(Id);
+            timer = new Timer(5000);
+            timer.Elapsed += (s, e) => InvokeAsync(StateHasChanged);
+            timer.Start(); 
+        }
+    }
+}

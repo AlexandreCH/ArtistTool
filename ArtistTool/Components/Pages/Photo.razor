@@ -1,8 +1,10 @@
 @page "/photo/{Id}"
+@using ArtistTool.Workflows
 @inject AIOptions Options
 @inject IPhotoDatabase Db
 @inject NavigationManager Navigation
 @rendermode InteractiveServer
+@inject IServiceProvider sp
 
 @if (loading)
 {
@@ -63,7 +65,12 @@ else
                         <button type="button" class="btn-edit" @onclick="StartEdit">Edit</button>
                         @if (Options.ShowMarketing)
                         {
-                            <button type="button" class="btn-market" @onclick="NavigateToMarket">🎨 Market This</button>
+                            <button type="button" class="btn-market" @onclick="NavigateToMarket">🎨 Market Preview</button>
+                        }
+                        @if (Options.UseWorkflows)
+                        {
+                            var uri = $"/workflows/marketing/{Id}";
+                            <button type="button" class="btn-workflow" @onclick="() => Navigation.NavigateTo(uri)">⚙️ Marketing Workflow</button>
                         }
                     </div>
                 </div>
@@ -100,8 +107,7 @@ else
     bool loading = true;
     bool editing = false;
     bool saving = false;
-    bool marketNavigating = false;
-
+    
     string editTitle = string.Empty;
     string editDescription = string.Empty;
     List<string> editCategories = new();

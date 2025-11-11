@@ -4,6 +4,8 @@
     {
         private readonly List<Photograph> Photos = [];
 
+        public Task InitAsync(CancellationToken cancellationToken) => Task.CompletedTask;
+
         private readonly List<Category> Categories = [
             new Category
             {

@@ -1,0 +1,25 @@
+﻿.results-grid {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 1.75rem;
+    padding: 1.25rem;
+    justify-content: flex-start;
+}
+
+.result-tile {
+    position: relative;
+    border: 1px solid rgba(148, 163, 184, 0.35);
+    border-radius: 22px;
+    overflow: hidden;
+    width: 240px;
+    height: 120px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: #f5f7fb;
+    isolation: isolate;
+    transition: transform 0.2s ease, box-shadow 0.25s ease, border-color 0.2s ease;
+    text-decoration: none;
+    color: inherit;
+}
+

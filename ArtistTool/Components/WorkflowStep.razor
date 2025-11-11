@@ -1,0 +1,32 @@
+﻿<div class="result-tile">
+    <p><strong>@Name</strong></p>
+    @if (!IsStarted && !IsFinished)
+    {
+        <div class="loading-container">
+            <p class="alert alert-danger">Waiting for the workflow...</p>
+        </div>
+    }
+
+    @if (IsStarted && !IsFinished)
+    {
+        <div class="loading-container">
+            <p class="alert alert-warning">The agent is working...</p>
+        </div>
+
+    }
+
+    @if (IsFinished)
+    {
+        <p class="alert alert-success">Step is complete.</p>
+    }
+</div>
+@code {
+    [Parameter]
+    public string Name { get; set; } = string.Empty;
+    
+    [Parameter]
+    public bool IsStarted { get; set; } = false;
+    
+    [Parameter]
+    public bool IsFinished { get; set; } = false;
+}

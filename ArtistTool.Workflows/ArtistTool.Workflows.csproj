@@ -3,11 +3,28 @@
   <PropertyGroup>
     <TargetFramework>net10.0</TargetFramework>
     <ImplicitUsings>enable</ImplicitUsings>
+	  <NoWarn>MEAI001</NoWarn>
     <Nullable>enable</Nullable>
   </PropertyGroup>
 
   <ItemGroup>
+    <PackageReference Include="Markdig" Version="0.43.0" />
+    <PackageReference Include="Microsoft.Agents.AI" Version="1.0.0-preview.251110.1" />
+    <PackageReference Include="Microsoft.Agents.AI.Workflows" Version="1.0.0-preview.251110.1" />
+    <PackageReference Include="Microsoft.AspNetCore.Hosting.Abstractions" Version="2.3.0" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\ArtistTool.Domain\ArtistTool.Domain.csproj" />
+    <ProjectReference Include="..\ArtistTool.Intelligence\ArtistTool.Intelligence.csproj" />
+    <ProjectReference Include="..\ArtistTool.Services\ArtistTool.Services.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
     <None Update="Agents.md">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
+    <None Update="index.css">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>
   </ItemGroup>

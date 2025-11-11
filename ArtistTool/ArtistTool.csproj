@@ -12,6 +12,7 @@
     <ProjectReference Include="..\ArtistTool.Intelligence\ArtistTool.Intelligence.csproj" />
     <ProjectReference Include="..\ArtistTool.ServiceDefaults\ArtistTool.ServiceDefaults.csproj" />
     <ProjectReference Include="..\ArtistTool.Services\ArtistTool.Services.csproj" />
+    <ProjectReference Include="..\ArtistTool.Workflows\ArtistTool.Workflows.csproj" />
   </ItemGroup>
 
   <ItemGroup>

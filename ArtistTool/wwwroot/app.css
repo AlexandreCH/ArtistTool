@@ -147,3 +147,39 @@ hr {
 .blazor-error-boundary::after {
     content: "An error has occurred.";
 }
+
+.loading-container, .error-container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    min-height: 60vh;
+    text-align: center;
+    background: white;
+    border-radius: 16px;
+    padding: 48px;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+}
+
+.spinner {
+    width: 60px;
+    height: 60px;
+    border: 5px solid #e5e7eb;
+    border-top-color: #2563eb;
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+    to {
+        transform: rotate(360deg);
+    }
+}
+
+.loading-container p {
+    margin-top: 24px;
+    font-size: 1.125rem;
+    color: #4b5563;
+    font-weight: 500;
+}
+

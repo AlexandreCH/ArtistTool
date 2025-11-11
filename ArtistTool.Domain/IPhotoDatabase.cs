@@ -9,5 +9,6 @@
         Task<IEnumerable<Category>> ListCategoriesAsync();
         Task<IEnumerable<Tag>> ListTagsAsync();
         Task<IEnumerable<string>> ListPhotoIdsAsync();
+        Task InitAsync(CancellationToken cancellationToken);
     }
 }
