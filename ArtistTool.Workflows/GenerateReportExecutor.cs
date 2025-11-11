@@ -92,7 +92,7 @@ public ValueTask<MarketingWorkflowContext> HandleAsync(MarketingWorkflowContext 
                 </figure>");
                 string area = string.Empty;
                 string topic = string.Empty;
-                foreach (var result in message.Research.Where(r => r.Result!.Medium == medium))
+                foreach (var result in message.Research.Where(r => r.Result!.Medium == medium).OrderBy(r => $"{r.Result!.Area} {r.Result!.Topic}"))
                 {
                     if (result.Result!.Area != area)
                     {
