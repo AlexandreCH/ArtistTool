@@ -1,85 +1,63 @@
-﻿using Microsoft.Agents.AI.Workflows;
+﻿using ArtistTool.Domain;
+using Microsoft.Agents.AI.Workflows;
 using Microsoft.Agents.AI.Workflows.Reflection;
 using Microsoft.Extensions.AI;
 using Microsoft.Extensions.Logging;
+using System.Text;
+using System.Text.Json;
 
 namespace ArtistTool.Workflows
 {
-    public class MediumPreviewExecutor(string id, string medium, AgentCache agents, ILogger<MediumPreviewExecutor> logger) : ReflectingExecutor<CritiqueExecutor>(id),
-        IMessageHandler<MarketingWorkflowContext, MarketingWorkflowContext>
+    public class MediumPreviewExecutor(string medium, string prompt, ILoggerFactory loggerFactory, ClientFactory factory) : ReflectingExecutor<MediumPreviewExecutor>($"{nameof(MediumPreviewExecutor)}_{medium}".Replace(" ", "_")),
+        IMessageHandler<ChatMessage, ChatMessage>
     {
         const string MEDIUM_AGENT = "Medium Preview Agent";
 
-        public async ValueTask<MarketingWorkflowContext> HandleAsync(MarketingWorkflowContext message, IWorkflowContext context, CancellationToken cancellationToken = default)
+        private ILogger logger = loggerFactory.CreateLogger <MediumPreviewExecutor>();
+
+        public async ValueTask<ChatMessage> HandleAsync(ChatMessage message, IWorkflowContext context, CancellationToken cancellationToken = default)
         {
-            logger.LogDebug("Starting MediumPreviewExecutor for Medium: {Medium} and photo {photoId}", medium, message.Id);
-
-            var directory = message.BaseDirectory;
-            var filename = Path.GetFileNameWithoutExtension(message.Photo!.Path);
- 
-            var resp = message.MediumPreviews[medium];
-            
-            if (resp.Completed && resp.Result is not null && File.Exists(resp.Result.ImagePath))
+            try
             {
-                logger.LogDebug("MediumPreviewExecutor found existing preview for Medium: {Medium} and photo {photoId}", medium, message.Id);
+                logger.LogDebug("Medium preview executor invoked for medium {Medium} with message payload: {Message}",
+                    medium,
+                    message.AsDebugString());
+
+                logger.LogDebug("Starting {AgentName} for Medium: {Medium}", MEDIUM_AGENT, medium);
+
+                var client = factory.GetImageGenerator();
+
+                var photoImage =
+                    message.Contents.OfType<DataContent>().First(f => f.Name == nameof(Photograph));
+
+                var originalImage = new DataContent(photoImage.Data, photoImage.MediaType);
+
+                var response = await client.GenerateAsync(new ImageGenerationRequest
+                {
+                    Prompt = prompt,
+                    OriginalImages = [originalImage]
+                }, cancellationToken: cancellationToken);
+
+                logger.LogDebug("Prompt returned.");
+
+                var data = response.Contents.OfType<DataContent>().FirstOrDefault();
+
+                if (data is null || data.Data.Length == 0)
+                {
+                    throw new InvalidDataException("DataContent not generated.");
+                }
+
+                data.Name = $"Medium preview: {medium}";
                 
-                return message;
+                await context.YieldOutputAsync(new MediumPreviewResponse(medium, data));
+                return new ChatMessage(ChatRole.System,
+                    [data, ..message.Contents]);
             }
-            else if (resp.Started)
+            catch(Exception ex)
             {
-                logger.LogDebug("MediumPreviewExecutor found existing preview for Medium: {Medium} and photo {photoId}", medium, message.Id);
-                return message;
+                logger.LogError(ex, "Image generation failed.");
+                throw;
             }
-
-            resp.Started = true;
-      
-            var prompt = agents.GetPrompt(MEDIUM_AGENT, medium);
-            
-            var dataContent = new DataContent(
-                File.ReadAllBytes(message.Photo!.Path),
-                message.Photo?.ContentType ?? "unknown");
-            
-            var client = agents.GetImageClient(MEDIUM_AGENT);
-            
-            var response = await client.GenerateAsync(new ImageGenerationRequest
-            {
-                Prompt = prompt,
-                OriginalImages = [dataContent]
-            }, cancellationToken: cancellationToken);
-                
-            var data = response.Contents.OfType<DataContent>().FirstOrDefault();
-
-            if (data is null || data.Data.Length == 0)
-            {
-                logger.LogError("MediumPreviewExecutor failed to generate preview for Medium: {Medium} and photo {photoId}", medium, message.Id);
-                resp.Completed = true;
-                return message;
-            }
-
-            var extension = data?.MediaType switch
-            {
-                "image/png" => ".png",
-                "image/jpeg" => ".jpg",
-                _ => ".img"
-            };
-
-            var mediumPath = Path.Combine(directory!, $"{filename}_{medium}{extension}");
-
-            logger.LogDebug("Saving medium {Medium} for photo {photoId} to location {path}",
-                medium, message.Id, mediumPath);
-
-            File.WriteAllBytes(mediumPath, data!.Data.ToArray());
-            
-            message.ImageRegistry.RegisterImage(Path.GetFileName(mediumPath),  $"In the style of {medium}: {message.Photo!.Title}", $"A rendition of the image in {medium}");
-
-            resp.Result = new MediumPreviewResponse
-            {
-                Medium = medium,
-                ImagePath = mediumPath
-            };
-
-            resp.Completed = true;
-            return message;
         }
     }
 }

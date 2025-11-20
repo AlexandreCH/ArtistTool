@@ -1,4 +1,64 @@
-﻿.results-grid {
+﻿.workflow-progress {
+    width: 95vw;
+    margin-left: 2vw;
+    height: 2rem;
+    border-radius: 12px;
+    border: 2px solid #ddd;
+    margin-bottom: 1rem;
+}
+
+timeShow {
+    float: left;
+    padding: 0.5rem;
+    margin-top: 1rem;
+    margin-bottom: 1rem;
+    margin-left: 0.5rem;
+    margin-right: 0.5rem;
+    border: solid black;
+    border-radius: 2rem;
+    color: lightgreen;
+    font-size: 1.5rem;
+    font-weight: bold;
+    font-family: sans-serif;
+}
+
+.start {
+    background-color: darkgreen;
+}
+
+.durationShow {
+    float: left;
+    padding: 0.5rem;
+    margin-top: 1rem;
+    margin-bottom: 1rem;
+    margin-left: 0.5rem;
+    margin-right: 0.5rem;
+    border: solid yellow;
+    border-radius: 2rem;
+    color: red;
+    font-size: 1.5rem;
+    font-weight: bold;
+    font-family: sans-serif;
+}
+
+.workflow-progress::-webkit-progress-bar {
+    background-color: #f0f0f0;
+    border-radius: 12px;
+}
+
+.workflow-progress::-webkit-progress-value {
+    background-color: #007bff;
+    border-radius: 12px;
+    transition: width 0.3s ease;
+}
+
+.workflow-progress::-moz-progress-bar {
+    background-color: #007bff;
+    border-radius: 12px;
+    transition: width 0.3s ease;
+}
+
+.results-grid {
     display: flex;
     flex-wrap: wrap;
     gap: 1.75rem;
@@ -12,7 +72,7 @@
     border-radius: 22px;
     overflow: hidden;
     width: 240px;
-    height: 12  0px;
+    height: 120px;
     display: flex;
     align-items: center;
     justify-content: center;

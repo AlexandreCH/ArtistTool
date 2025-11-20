@@ -283,3 +283,93 @@ The `InitializeAgentsAsync` method will throw `FileNotFoundException` if the Age
 - [ ] Async agent execution with progress callbacks
 - [ ] Agent versioning and A/B testing
 - [ ] Workflow telemetry and monitoring
+
+     
+```mermaid
+  flowchart TD
+  Start["Start (Start)"];
+  MediumPreviewExecutor_Metal["MediumPreviewExecutor_Metal"];
+  f6643a70-c7a8-4fa6-bb60-fade75c84a56["f6643a70-c7a8-4fa6-bb60-fade75c84a56"];
+  bf2b7d94-697d-4cd1-8da9-71316ac141b8["bf2b7d94-697d-4cd1-8da9-71316ac141b8"];
+  dfe09fde-1c1a-42da-8e87-2068f819a9e0["dfe09fde-1c1a-42da-8e87-2068f819a9e0"];
+  7493511d-6438-4b5c-80d7-e2fd34454793["7493511d-6438-4b5c-80d7-e2fd34454793"];
+  2aebb4f7-958b-43ad-b80e-6fffdd28024f["2aebb4f7-958b-43ad-b80e-6fffdd28024f"];
+  491dc6ec-3de4-47fe-b80c-32993ba4b81a["491dc6ec-3de4-47fe-b80c-32993ba4b81a"];
+  MediumPreviewExecutor_Canvas["MediumPreviewExecutor_Canvas"];
+  8c53a97b-9ee1-449d-b041-b8e64f67f6c0["8c53a97b-9ee1-449d-b041-b8e64f67f6c0"];
+  f41e5ec8-ea65-43b4-b90e-12ff047e3b87["f41e5ec8-ea65-43b4-b90e-12ff047e3b87"];
+  cf36f388-8839-4956-af86-82fdf5ce1999["cf36f388-8839-4956-af86-82fdf5ce1999"];
+  ca8b8866-00cc-485e-81a0-0e9e2ff8c467["ca8b8866-00cc-485e-81a0-0e9e2ff8c467"];
+  ebdcd236-4b75-4401-918a-e25c85d07a32["ebdcd236-4b75-4401-918a-e25c85d07a32"];
+  6411d4c8-a229-40d5-b8e7-ac131438a4ec["6411d4c8-a229-40d5-b8e7-ac131438a4ec"];
+  MediumPreviewExecutor_Acrylic["MediumPreviewExecutor_Acrylic"];
+  1794748b-179a-43df-88b7-b6e5e9970fbc["1794748b-179a-43df-88b7-b6e5e9970fbc"];
+  4dfbf38a-be01-4d1f-942e-5b60dec82857["4dfbf38a-be01-4d1f-942e-5b60dec82857"];
+  9e24db2c-abfe-47bf-b914-a91de2629cce["9e24db2c-abfe-47bf-b914-a91de2629cce"];
+  c10cc065-c23d-4f6d-a7b4-03b2283d7f88["c10cc065-c23d-4f6d-a7b4-03b2283d7f88"];
+  e26a0032-f912-4908-814a-ea5978c765b6["e26a0032-f912-4908-814a-ea5978c765b6"];
+  82632bac-2050-47c1-8963-3f7f3c66177d["82632bac-2050-47c1-8963-3f7f3c66177d"];
+  MediumPreviewExecutor_Framed_photo["MediumPreviewExecutor_Framed_photo"];
+  bb562f14-a8a1-4513-964a-23160f3e91e2["bb562f14-a8a1-4513-964a-23160f3e91e2"];
+  5bd6d17c-2c4a-4381-8584-5fe11b30fd61["5bd6d17c-2c4a-4381-8584-5fe11b30fd61"];
+  a8ac2de2-db95-4d49-a2fa-6c1534bd7aee["a8ac2de2-db95-4d49-a2fa-6c1534bd7aee"];
+  d0fd33cb-842f-45c8-bd94-64b5fde401ca["d0fd33cb-842f-45c8-bd94-64b5fde401ca"];
+  131f2f8e-f450-4afe-8b59-0470b18b948f["131f2f8e-f450-4afe-8b59-0470b18b948f"];
+  ad627af3-5b5e-49b5-aded-38e17f11d792["ad627af3-5b5e-49b5-aded-38e17f11d792"];
+  ChatMessageExecutor["ChatMessageExecutor"];
+  AggregatingExecutor["AggregatingExecutor"];
+ 
+  fan_in_491dc6ec-3de4-47fe-b80c-32993ba4b81a_72FC3010((fan-in))
+  fan_in_6411d4c8-a229-40d5-b8e7-ac131438a4ec_4D44A8F7((fan-in))
+  fan_in_82632bac-2050-47c1-8963-3f7f3c66177d_F88DEEB9((fan-in))
+  fan_in_ad627af3-5b5e-49b5-aded-38e17f11d792_393946F7((fan-in))
+  fan_in_AggregatingExecutor_C8B4D845((fan-in))
+  2aebb4f7-958b-43ad-b80e-6fffdd28024f --> fan_in_491dc6ec-3de4-47fe-b80c-32993ba4b81a_72FC3010;
+  7493511d-6438-4b5c-80d7-e2fd34454793 --> fan_in_491dc6ec-3de4-47fe-b80c-32993ba4b81a_72FC3010;
+  bf2b7d94-697d-4cd1-8da9-71316ac141b8 --> fan_in_491dc6ec-3de4-47fe-b80c-32993ba4b81a_72FC3010;
+  fan_in_491dc6ec-3de4-47fe-b80c-32993ba4b81a_72FC3010 --> 491dc6ec-3de4-47fe-b80c-32993ba4b81a;
+  ca8b8866-00cc-485e-81a0-0e9e2ff8c467 --> fan_in_6411d4c8-a229-40d5-b8e7-ac131438a4ec_4D44A8F7;
+  ebdcd236-4b75-4401-918a-e25c85d07a32 --> fan_in_6411d4c8-a229-40d5-b8e7-ac131438a4ec_4D44A8F7;
+  f41e5ec8-ea65-43b4-b90e-12ff047e3b87 --> fan_in_6411d4c8-a229-40d5-b8e7-ac131438a4ec_4D44A8F7;
+  fan_in_6411d4c8-a229-40d5-b8e7-ac131438a4ec_4D44A8F7 --> 6411d4c8-a229-40d5-b8e7-ac131438a4ec;
+  4dfbf38a-be01-4d1f-942e-5b60dec82857 --> fan_in_82632bac-2050-47c1-8963-3f7f3c66177d_F88DEEB9;
+  c10cc065-c23d-4f6d-a7b4-03b2283d7f88 --> fan_in_82632bac-2050-47c1-8963-3f7f3c66177d_F88DEEB9;
+  e26a0032-f912-4908-814a-ea5978c765b6 --> fan_in_82632bac-2050-47c1-8963-3f7f3c66177d_F88DEEB9;
+  fan_in_82632bac-2050-47c1-8963-3f7f3c66177d_F88DEEB9 --> 82632bac-2050-47c1-8963-3f7f3c66177d;
+  131f2f8e-f450-4afe-8b59-0470b18b948f --> fan_in_ad627af3-5b5e-49b5-aded-38e17f11d792_393946F7;
+  5bd6d17c-2c4a-4381-8584-5fe11b30fd61 --> fan_in_ad627af3-5b5e-49b5-aded-38e17f11d792_393946F7;
+  d0fd33cb-842f-45c8-bd94-64b5fde401ca --> fan_in_ad627af3-5b5e-49b5-aded-38e17f11d792_393946F7;
+  fan_in_ad627af3-5b5e-49b5-aded-38e17f11d792_393946F7 --> ad627af3-5b5e-49b5-aded-38e17f11d792;
+  491dc6ec-3de4-47fe-b80c-32993ba4b81a --> fan_in_AggregatingExecutor_C8B4D845;
+  6411d4c8-a229-40d5-b8e7-ac131438a4ec --> fan_in_AggregatingExecutor_C8B4D845;
+  82632bac-2050-47c1-8963-3f7f3c66177d --> fan_in_AggregatingExecutor_C8B4D845;
+  ChatMessageExecutor --> fan_in_AggregatingExecutor_C8B4D845;
+  ad627af3-5b5e-49b5-aded-38e17f11d792 --> fan_in_AggregatingExecutor_C8B4D845;
+  fan_in_AggregatingExecutor_C8B4D845 --> AggregatingExecutor;
+  f6643a70-c7a8-4fa6-bb60-fade75c84a56 --> bf2b7d94-697d-4cd1-8da9-71316ac141b8;
+  dfe09fde-1c1a-42da-8e87-2068f819a9e0 --> 7493511d-6438-4b5c-80d7-e2fd34454793;
+  MediumPreviewExecutor_Metal --> f6643a70-c7a8-4fa6-bb60-fade75c84a56;
+  MediumPreviewExecutor_Metal --> dfe09fde-1c1a-42da-8e87-2068f819a9e0;
+  MediumPreviewExecutor_Metal --> 2aebb4f7-958b-43ad-b80e-6fffdd28024f;
+  8c53a97b-9ee1-449d-b041-b8e64f67f6c0 --> f41e5ec8-ea65-43b4-b90e-12ff047e3b87;
+  cf36f388-8839-4956-af86-82fdf5ce1999 --> ca8b8866-00cc-485e-81a0-0e9e2ff8c467;
+  MediumPreviewExecutor_Canvas --> 8c53a97b-9ee1-449d-b041-b8e64f67f6c0;
+  MediumPreviewExecutor_Canvas --> cf36f388-8839-4956-af86-82fdf5ce1999;
+  MediumPreviewExecutor_Canvas --> ebdcd236-4b75-4401-918a-e25c85d07a32;
+  1794748b-179a-43df-88b7-b6e5e9970fbc --> 4dfbf38a-be01-4d1f-942e-5b60dec82857;
+  9e24db2c-abfe-47bf-b914-a91de2629cce --> c10cc065-c23d-4f6d-a7b4-03b2283d7f88;
+  MediumPreviewExecutor_Acrylic --> 1794748b-179a-43df-88b7-b6e5e9970fbc;
+  MediumPreviewExecutor_Acrylic --> 9e24db2c-abfe-47bf-b914-a91de2629cce;
+  MediumPreviewExecutor_Acrylic --> e26a0032-f912-4908-814a-ea5978c765b6;
+  bb562f14-a8a1-4513-964a-23160f3e91e2 --> 5bd6d17c-2c4a-4381-8584-5fe11b30fd61;
+  a8ac2de2-db95-4d49-a2fa-6c1534bd7aee --> d0fd33cb-842f-45c8-bd94-64b5fde401ca;
+  MediumPreviewExecutor_Framed_photo --> bb562f14-a8a1-4513-964a-23160f3e91e2;
+  MediumPreviewExecutor_Framed_photo --> a8ac2de2-db95-4d49-a2fa-6c1534bd7aee;
+  MediumPreviewExecutor_Framed_photo --> 131f2f8e-f450-4afe-8b59-0470b18b948f;
+  Start --> ChatMessageExecutor;
+  Start --> MediumPreviewExecutor_Metal;
+  Start --> MediumPreviewExecutor_Canvas;
+  Start --> MediumPreviewExecutor_Acrylic;
+  Start --> MediumPreviewExecutor_Framed_photo;
+```
+      

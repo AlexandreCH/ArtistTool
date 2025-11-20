@@ -7,8 +7,9 @@ namespace ArtistTool.Services
         // General services can be registered here in the future
         public static IServiceCollection AddServices(this IServiceCollection services)
         {
+            services.AddSingleton<IMessageHub, MessageHub>();
             services.AddSingleton<IImageManager, ImageManager>();
-            services.AddSingleton<IImageRegistry, ImageRegistry>();
+            services.AddSingleton<IProjectManager, ProjectManager>();
             // Add any common services needed across the application
             return services;
         }

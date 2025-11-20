@@ -61,7 +61,7 @@ if (aiOptions.UseWorkflows)
     dbLogger.LogInformation("Initializing AI Workflows");
     try
     {
-        await app.Services.InitializeAgentsAsync();
+        await app.Services.InitializeClientsAsync();
         dbLogger.LogInformation("AI Workflows initialized successfully");
     }
     catch (Exception ex)
@@ -72,6 +72,32 @@ if (aiOptions.UseWorkflows)
 }
 
 app.MapDefaultEndpoints();
+
+app.MapGet("/report/{photoId}/{reportId:int}/{filename}",
+    async (string photoId, int reportId, string filename, IProjectManager pm, ILogger<Program> logger) =>
+{
+    logger.LogDebug("Report request: photoId={PhotoId}, reportId={ReportId}, filename={Filename}", photoId, reportId, filename);
+
+    try
+    {
+        var (content, mediaType) = await pm.GetReportAssetAsync(photoId, reportId, filename);
+        if (mediaType.StartsWith("image", StringComparison.OrdinalIgnoreCase))
+        {
+            logger.LogDebug("Serving report image asset: photoId={PhotoId}, reportId={ReportId}, filename={Filename}", photoId, reportId, filename);
+            return Results.File(content.ToArray(), mediaType, filename);
+        }
+        else
+        {
+            logger.LogDebug("Serving report text asset: photoId={PhotoId}, reportId={ReportId}, filename={Filename}", photoId, reportId, filename);
+            return Results.Content(System.Text.Encoding.UTF8.GetString(content.Span), mediaType);
+        }
+    }
+    catch (Exception ex)
+    {
+        logger.LogError(ex, "Error retrieving report asset: photoId={PhotoId}, reportId={ReportId}, filename={Filename}", photoId, reportId, filename);
+        return Results.StatusCode(500);
+    }
+});
 
 app.MapGet("/images/{type}/{id}", async (string type, string id, IPhotoDatabase db, ILogger<Program> logger) =>
 {

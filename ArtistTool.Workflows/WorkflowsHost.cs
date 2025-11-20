@@ -1,18 +1,21 @@
-﻿using Microsoft.Extensions.DependencyInjection;
+﻿using ArtistTool.Services;
+using ArtistTool.Workflows.Messages;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
-using System.Collections.Concurrent;
 
 namespace ArtistTool.Workflows
 {
-    public class WorkflowsHost(IServiceProvider sp) : IHostedService, IMarketingWorkflowController
+    public class WorkflowsHost(
+        IMessageHub messageHub,
+        ILoggerFactory factory,
+        ReportService reportService,
+        MarketingWorkflow marketingWorkflow) : IHostedService
     {
         private bool started;
-        private readonly ILogger<WorkflowsHost> _logger =
-            sp.GetRequiredService<ILogger<WorkflowsHost>>();
-        
-        private readonly ConcurrentDictionary<string, MarketingWorkflow> _workflows = [];
-
+        private List<Task> workflows = [];
+        private readonly ILogger _logger =
+            factory.CreateLogger<WorkflowsHost>();
+     
         public Task StartAsync(CancellationToken cancellationToken)
         {
             if (started)
@@ -22,27 +25,31 @@ namespace ArtistTool.Workflows
             started = true;
             _logger.LogInformation("WorkflowsHost starting.");
            
+            var subscription = messageHub.Subscribe<WorkflowRequested<string>>(
+                async message =>
+                {
+                    _logger.LogDebug("Received JobStartedFor message for job with name {JobName} and payload: {Payload}",
+                        message.Name, message.Payload);
+                    
+                    if (message.Name == nameof(MarketingWorkflow))
+                    {
+                        var photoId = message.Payload;
+                        _logger.LogDebug("Marketing Workflow requested for Photo ID: {PhotoId}", photoId);
+                        workflows.Add(marketingWorkflow.StartWorkflowAsync(photoId));
+                    }
+                });
+
+            var sub2 = messageHub.Subscribe<WorkflowRequested<MarketReport>>(async reportWrapper =>
+            {
+                var mr = reportWrapper.Payload;
+                if (mr.AnalysisDone && mr.ReportWritingPct <= 0)
+                {
+                    _logger.LogDebug("Analysis for workflow is commplete. Requesting a report generation for {PhotoId}", mr.Id);
+                    workflows.Add(reportService.PublishReportAsync(mr));
+                }
+            });     
+
             return Task.CompletedTask;
-        }
-
-        public async Task<MarketingWorkflowContext> GetOrStartMarketingWorkflowAsync(string photoId)
-        {
-            if (_workflows.TryGetValue(photoId, out MarketingWorkflow? value) && value is not null)
-            {
-                return value.Context;
-            }
-            
-            var workflow = new MarketingWorkflow(sp);
-
-            if (await workflow.InitAsync(photoId) && _workflows.TryAdd(photoId, workflow))
-            {
-                _logger.LogInformation("Started workflow for photo {PhotoId}.", photoId);
-                return workflow.Context;
-            }
-            else
-            {
-                throw new InvalidOperationException($"Failed to initialize workflow for {photoId}.");
-            }
         }
 
         public Task StopAsync(CancellationToken cancellationToken)

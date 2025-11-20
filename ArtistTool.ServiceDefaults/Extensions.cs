@@ -67,6 +67,7 @@ public static class Extensions
                     // Add custom AI agent trace sources (if we create any custom spans)
                     .AddSource("ArtistTool.Intelligence.conversational")
                     .AddSource("ArtistTool.Intelligence.vision")
+                    .AddSource("ArtistTool.Workflows.*")
 
                     // Set sampler to record all traces to ensure AI prompts/responses are captured
                     // By default, this captures all traces including sensitive AI data when EnableSensitiveData is true

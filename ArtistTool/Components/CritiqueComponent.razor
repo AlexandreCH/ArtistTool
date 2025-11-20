@@ -1,0 +1,52 @@
+﻿@if (Response == null)
+{
+    return;
+}
+
+<div class="container">
+    <div class="row">
+        <div class="col-12 text-center">
+            <strong>Critique</strong>
+        </div>
+    </div>
+    @foreach (var critique in Response.Critiques.OrderBy(c => c.Area))
+    {
+        <div class="row">
+            <div class="col-12 alert alert-@cssSwitch(critique.Rating)"> 
+                <small>
+                    <strong>@critique.Area</strong>
+                    @GenRating(critique.Rating)
+                    <em>@critique.Praise</em>
+                    @critique.ImprovementSuggestion
+                </small>
+            </div>
+        </div>
+    }
+}
+    
+</div>
+
+@code {
+    [CascadingParameter]
+    public MarketReport? Report { get; set; }
+
+    private string cssSwitch(int rating) => rating switch
+        {
+            >= 8 => "success",
+            >= 6 => "info",
+            >= 4 => "warning",
+            _ => "danger"
+        };
+
+    private CritiqueResponse? Response => Report?.Critique;
+
+    private string GenRating(int rating)
+    {
+        return $"{GenStar(1, rating)}{GenStar(2, rating)}{GenStar(3, rating)}{GenStar(4, rating)}{GenStar(5, rating)} {rating}/10";
+    }
+
+    private string GenStar(int star, int rating)
+    {
+        return star * 2 <= rating ? "★" : "☆";
+    }
+}

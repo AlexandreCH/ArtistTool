@@ -1,0 +1,108 @@
+﻿@if (Report != null)
+{
+    <div class="container">
+        <div class="row">
+            <div class="col-6">
+                <div class="row">
+                    <div class="col-6 align-content-right">Start:</div>
+                    <div class="col-6 align-content-left">@start</div>
+                </div>
+                <div class="row">
+                    <div class="col-6 align-content-right">Now:</div>
+                    <div class="col-6 align-content-left">@now</div>
+                </div>
+                <div class="row">
+                    <div class="col-6 align-content-right">Elapsed:</div>
+                    <div class="col-6 align-content-left">@elapsed</div>
+                </div>
+            </div>
+            <div class="col-6">
+                @foreach(var status in statuses)
+                {
+                    <div class="row">
+                        <div class="col">
+                            <strong>@status.Substring(0, 8):</strong>
+                            <span>@status.Substring(11)</span>
+                        </div>
+                    </div>
+                }
+            </div>
+        </div>
+        <div class="row">
+            <div class="col-12 align-content-center">Progress</div>
+        </div>
+        <div class="row">
+            <div class="col-12">
+                <progress max="200" value="@(Report.Pct+Report.ReportWritingPct)" class="workflow-progress" disabled="@Report.Done" />
+            </div>
+        </div>
+        <div class="row">
+            <div class="col-6 align-content-center">
+                @if (highLightAnalysis)
+                {
+                    <strong>Conducting analysis...</strong>
+                }
+                else
+                {
+                    <span>Analysis complete</span>
+                }
+            </div>
+            <div class="col-6 align-content-center">
+                @if (highLightAnalysis)
+                {
+                    <span>Waiting for analysis to complete...</span>
+                }
+                else if (highLightWriting)
+                {
+                    <strong>Writing report...</strong>
+                }
+                else
+                {
+                    <span>Report complete</span>
+                }
+            </div>
+        </div>
+        <div class="row">
+            <div class="col-5">
+                <progress max="100" value="@Report.Pct" class="workflow-progress" disabled="@(!highLightAnalysis)" />
+            </div>
+            <div class="col-1">
+                <small>@Report.Pct % complete.</small>
+            </div>
+            <div class="col-5">
+                <progress max="100" value="@Report.ReportWritingPct" class="workflow-progress" disabled="@(!highLightWriting)" />
+            </div>
+            <div class="col-1">
+                <small>@Report.ReportWritingPct % complete.</small>
+            </div>
+        </div>
+    </div>
+}
+
+@code {
+    [CascadingParameter]
+    public MarketReport? Report { get; set; } = null;
+    private Queue<string> statuses = new();
+    private bool highLightAnalysis => Report is not null && Report.AnalysisDone == false;
+    private bool highLightWriting => Report is not null && Report.AnalysisDone == true && Report.Done == false;
+    private string formattedDate(DateTime inDate) => inDate.ToString("HH:mm:ss");
+    private string start = string.Empty;
+    private string now = string.Empty;
+    private string elapsed = string.Empty;
+    protected override void OnParametersSet()
+    {
+        if (Report != null)
+        {
+            start = formattedDate(Report.StartDate);
+            now = formattedDate(DateTime.Now);
+            elapsed = (DateTime.Now - Report.StartDate).ToString(@"hh\:mm\:ss");
+            statuses.Enqueue($"{DateTime.Now:HH:mm:ss} - {Report.Status}");
+            if (statuses.Count > 5)
+            {
+                statuses.Dequeue();
+            }
+        } 
+
+        base.OnParametersSet();
+    }
+}

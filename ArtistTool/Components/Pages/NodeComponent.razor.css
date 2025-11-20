@@ -1,0 +1,97 @@
+﻿.node-parent {
+    display: flex;
+    flex-direction: column;
+    width: 100%;
+    border: 2px solid #ddd;
+    border-radius: 12px;
+    padding: 1rem;
+    margin-bottom: 0.5rem;
+    transition: background-color 0.3s ease, border-color 0.3s ease;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.node-success {
+    background-color: #d4edda;
+    border-color: #28a745;
+    transition: background-color 0.3s ease, border-color 0.3s ease;
+}
+
+.node-pending {
+    background-color: #f8d7da;
+    border-color: #dc3545;
+}
+
+.node-title {
+    font-weight: 600;
+    padding: 0.5rem;
+    margin-bottom: 0.75rem;
+    border-bottom: 1px solid rgba(0, 0, 0, 0.1);
+    font-size: 1.1rem;
+}
+
+.node-progress-container {
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+    margin-bottom: 0.75rem;
+    padding: 0 0.5rem;
+}
+
+.node-progress {
+    width: 100%;
+    height: 1.5rem;
+    border-radius: 8px;
+    border: 1px solid #ddd;
+}
+
+.node-progress::-webkit-progress-bar {
+    background-color: #f0f0f0;
+    border-radius: 8px;
+}
+
+.node-progress::-webkit-progress-value {
+    background-color: #28a745;
+    border-radius: 8px;
+    transition: width 0.3s ease;
+}
+
+.node-progress::-moz-progress-bar {
+    background-color: #28a745;
+    border-radius: 8px;
+    transition: width 0.3s ease;
+}
+
+.node-progress-text {
+    font-size: 0.875rem;
+    color: #666;
+    text-align: center;
+}
+
+.node-children {
+    display: flex;
+    flex-direction: row;
+    gap: 1rem;
+    width: 100%;
+    flex-wrap: wrap;
+    padding: 0.5rem;
+    background-color: rgba(255, 255, 255, 0.3);
+    border-radius: 8px;
+}
+
+.node-children > * {
+    flex: 1 1 0;
+    min-width: 200px;
+}
+
+/* When there are 3 or fewer children, distribute evenly */
+.node-children:has(> :nth-child(-n+3)) > * {
+    flex-basis: calc(33.333% - 0.67rem);
+}
+
+.node-children:has(> :nth-child(-n+2)) > * {
+    flex-basis: calc(50% - 0.5rem);
+}
+
+.node-children:has(> :only-child) > * {
+    flex-basis: 100%;
+}

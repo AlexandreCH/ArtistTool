@@ -1,8 +1,10 @@
-﻿namespace ArtistTool.Workflows
+﻿using Microsoft.Extensions.AI;
+
+namespace ArtistTool.Workflows
 {
-    public class MediumPreviewResponse
+    public class MediumPreviewResponse(string medium, DataContent preview)
     {
-        public string Medium { get; set; } = string.Empty;  
-        public string ImagePath { get; set; } = string.Empty;
+        public string Medium { get; } = medium;
+        public DataContent Preview { get; } = preview;
     }
 }

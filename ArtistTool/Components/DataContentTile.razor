@@ -1,0 +1,29 @@
+﻿@using Microsoft.Extensions.AI
+
+@if (Content is null)
+{
+    <div class="photo-tile empty">
+        <div class="photo-title">No Photo</div>
+    </div>
+    return;
+}
+<div class="photo-tile">
+    <img src="@PhotoEncoded" alt="@Content?.Name" />
+    <div class="photo-title">@Content?.Name</div>
+    <div class="photo-description">Illustration of photo in the medium format</div>
+</div>
+@code {
+    [Parameter]
+    public DataContent? Content { get; set; }
+
+    public string? PhotoEncoded;
+
+    protected override void OnParametersSet()
+    {
+        if (Content is not null)
+        {
+            var payload = Convert.ToBase64String(Content.Data.Span);
+            PhotoEncoded = $"data:{Content.MediaType};base64,{payload}";
+        }
+    }
+}

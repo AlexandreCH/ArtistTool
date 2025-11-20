@@ -1,90 +1,124 @@
 ﻿@page "/workflows/marketing/{Id}"
-@using System.ComponentModel
+@using Microsoft.Extensions.AI
+@inject IMessageHub Hub
 @using System.Timers
-@inject NavigationManager Navigate
-@inject IMarketingWorkflowController Controller
+@rendermode InteractiveServer
+@implements IDisposable
 
-@if (_context is null)
+<h1>Marketing Workflow</h1>
+
+@if (report == null)
 {
-    <div class="loading-container">
+    <div class="result-tile">
         <div class="spinner"></div>
-        <p>Loading marketing workflow...</p>
     </div>
+    <p>Waiting for the workflow to start...</p>
 }
-else
+
+@if(report != null)
 {
-    <p><strong>Marketing Workflow Status for @_context?.Photo?.Title</strong></p>
-    <div class="results-grid">
-        <PhotoTile Id="@_context?.Id" />
-        @if (_context?.Completed != true)
-        {
-            <p>The workflow is still running. This page will refresh every few seconds.</p>
-            <WorkflowStep Name="Marketing workflow"
-            IsStarted="true"
-            IsFinished="false" />
-            @if (_context is not null)
-            {
-                if (_context.Critique is not null)
-                {
-                    <WorkflowStep Name="Image critique"
-                    IsStarted="@_context.Critique.Started"
-                    IsFinished="@_context.Critique.Completed" />
-                }
-
-                @foreach (var medium in _context?.MediumPreviews ?? [])
-                {
-                    <WorkflowStep Name="@GetNameForMedium(medium.Key)"
-                    IsStarted="@medium.Value.Started"
-                    IsFinished="@medium.Value.Completed" />
-                }
-
-                @foreach (var research in _context?.Research ?? [])
-                {
-                    <WorkflowStep Name="@GetNameForResearch(research.Result!)"
-                    IsStarted="@research.Started"
-                    IsFinished="@research.Completed"/>
-                }
-            }
-        }
-        else
-        {
-            <p>The workflow is completed. View the results at <code>@_context.BaseDirectory</code></p>
-        }
-    </div>
+    if (report.Done)
+    {
+        <iframe width="1920" height="1080" src="/report/@report.Id/@report.ReportId/index.html">
+        </iframe>
+    }
+    <CascadingValue IsFixed="true" Value="report">
+        <div class="container">
+            <div class="row">
+                <div class="col-12">
+                    <ProgressController />
+                </div>
+            </div>
+            <div class="row">
+                <div class="col-12">
+                    <CritiqueComponent />
+                </div>
+            </div>
+        </div>
+    </CascadingValue>
 }
 
 @code {
-    private Timer? timer = null;
-
     [Parameter]
     public string Id { get; set; } = string.Empty;
 
-    private string GetNameForMedium(string medium) => $"Generate {medium} preview";
+    private bool requested = false;
 
-    private string GetNameForResearch(ResearchResponse r) =>
-    $"Research for {r.Medium}: {r.Area} ({r.Topic})";
+    private Timer? timer;
+    private MarketReport? report = null;
+    private Action? unsub;
 
-    private MarketingWorkflowContext? _context;
-
-    protected override async Task OnParametersSetAsync()
+    protected override void OnParametersSet()
     {
-        if (Id is null)
+        if (requested || string.IsNullOrWhiteSpace(Id))
         {
-            _context = null;
             return;
         }
 
-        if (_context is null)
+        requested = true;
+
+        InvokeAsync(() => Hub.Publish<WorkflowRequested<string>>(new(nameof(MarketingWorkflow), Id)));
+
+        timer = new Timer(200.0);
+        timer.AutoReset = false;
+        timer.Elapsed += Subscribe;
+        timer.Enabled = true;
+    }
+
+    public void Subscribe(object? sender, ElapsedEventArgs args)
+    {
+        var unsub1 = Hub.Subscribe<ReportUpdate>(OnReportUpdate);
+        var unsub2 = Hub.Subscribe<ReportFinished>(OnReportFinished);
+        var unsub3 = Hub.Subscribe<MarketReport>(OnMarketReport);
+        unsub = () => { unsub1(); unsub2(); unsub3(); unsub = null; };
+        timer?.Dispose();
+        timer = null;
+    }
+
+    public void Think(object? sender, ElapsedEventArgs args) =>
+        InvokeAsync(StateHasChanged);
+
+    private void OnMarketReport(MarketReport r)
+    {
+        if (r.Id == Id)
         {
-            _context = await Controller.GetOrStartMarketingWorkflowAsync(Id);
-            timer = new Timer(5000);
-            timer.Elapsed += (s, e) => InvokeAsync(() =>
+            InvokeAsync(() =>
+            {
+                report = r;
+                StateHasChanged();
+            });
+        }
+    }
+    private void OnReportUpdate(ReportUpdate r) => OnMarketReport(r.Report);
+
+    private void OnReportFinished(ReportFinished r)
+    {
+        if (r.Id == Id)
         {
-            timer.Stop();
-            timer.Dispose();
-            Navigate.NavigateTo(Navigate.Uri, forceLoad: true);
-        });
-            timer.Start(); 
+            if (unsub is not null)
+            {
+                unsub();
+            }
+            OnMarketReport(r.Report);
+        }
+    }
+
+    public void Dispose()
+    {
+        if (timer != null)
+        {
+            try
+            {
+                timer.Dispose();
+                timer = null;
+            }
+            catch { }
+        }
+
+        if (unsub is not null)
+        {
+            var action = unsub;
+            action();   
         }
     }
 }

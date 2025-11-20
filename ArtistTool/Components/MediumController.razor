@@ -1,0 +1,53 @@
+﻿@if (Report is null)
+{
+    return;
+}
+
+<div class="container">
+    <div class="row">
+        <div class="col-12 text-center">
+            <strong>Medium Reports</strong>
+        </div>
+    </div>
+    <div class="row">
+        @if (Report.MediumReports.Length == 0)
+        {
+            <div class="col-2 spinner">&nbsp;</div>
+            <div class="col-10">
+                <em>Generating reports...</em>
+            </div>
+        }
+        else 
+        {
+            foreach (var mediumReport in Report.MediumReports)
+            {
+                <div class="@colSwitch()">
+                    <CascadingValue Value="mediumReport">
+                        <MediumReportComponent/>
+                    </CascadingValue>
+                </div>
+            }
+        }
+    </div>
+</div>
+@code {
+    [CascadingParameter]
+    public MarketReport? Report { get; set; }
+
+    private string colSwitch()
+    {
+        if (Report is null || Report.MediumReports is null || Report.MediumReports.Length < 1)
+        {
+            return "hidden";
+        }
+
+        return Report.MediumReports.Length switch
+        {
+            1 => "col-12",
+            2 => "col-6",
+            3 => "col-4",
+            4 => "col-3",
+            _ => "col"
+        };
+    }
+}

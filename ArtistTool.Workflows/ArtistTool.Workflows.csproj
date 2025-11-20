@@ -20,13 +20,4 @@
     <ProjectReference Include="..\ArtistTool.Services\ArtistTool.Services.csproj" />
   </ItemGroup>
 
-  <ItemGroup>
-    <None Update="Agents.md">
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-    </None>
-    <None Update="index.css">
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-    </None>
-  </ItemGroup>
-
 </Project>

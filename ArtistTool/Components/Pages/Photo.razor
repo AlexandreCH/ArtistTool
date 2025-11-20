@@ -5,6 +5,8 @@
 @inject NavigationManager Navigation
 @rendermode InteractiveServer
 @inject IServiceProvider sp
+@using ArtistTool.Services
+@inject IProjectManager pm
 
 @if (loading)
 {
@@ -95,6 +97,20 @@ else
                 }
             }
         </header>
+        @if (reports.Length > 0)
+        {
+            <div class="tags">
+                <strong>
+                    Reports
+                </strong>
+                @foreach (var report in reports)
+                {
+                    <a href="/reports/@photo.Id/@report/index.html">
+                        <span class="tag-pill">Report ID: @report</span>
+                    </a>
+                }
+            </div>
+        }
         <div class="photo-canvas">
             <img src="/images/full/@photo.Id" alt="@photo.Title" />
         </div>
@@ -107,7 +123,8 @@ else
     bool loading = true;
     bool editing = false;
     bool saving = false;
-    
+
+    private int[] reports = []; 
     string editTitle = string.Empty;
     string editDescription = string.Empty;
     List<string> editCategories = new();

@@ -1,0 +1,88 @@
+﻿@if (Node is null)
+{
+    return;
+}
+
+<div class="node-parent @(Node.Status ? "node-success" : "node-pending")">
+    <div class="node-title">
+        @Node.Title
+    </div>
+    @if (ShowSuccess)
+    {
+        <div><p>@SuccessToShow</p></div>
+    }
+    @if (!Node.Status && Node.Children.Any())
+    {
+        <div class="node-progress-container">
+            <progress max="@Node.Children.Count" value="@CompletedChildren" class="node-progress"></progress>
+            <div class="spinner"></div>
+            <span class="node-progress-text">@CompletedChildren / @Node.Children.Count</span>
+        </div>
+    }
+    @if (Node.Children.Any())
+    {
+        <div class="node-children">
+            @foreach (var child in Node.Children)
+            {
+                <NodeComponent Node="child" />
+            }
+        </div>
+    }
+</div>
+
+@code {
+    [Parameter]
+    public NodeItem? Node { get; set; }
+
+    [Parameter]
+    public string SuccessMessage { get; set; } = string.Empty;
+
+    protected bool ShowSuccess => Node?.Status == true && (!string.IsNullOrWhiteSpace(Node?.SuccessMessage) ||
+    !string.IsNullOrWhiteSpace(SuccessMessage));
+
+    protected string SuccessToShow => (string.IsNullOrWhiteSpace(SuccessMessage) ?
+        Node?.SuccessMessage : SuccessMessage) ?? string.Empty;
+
+    private int CompletedChildren => Node?.Children.Count(c => c.Status) ?? 0;
+
+    public class NodeItem(string title, string? success = null) 
+    {
+        private bool? status = null;
+
+        public bool Status
+        {
+            set => status = value;
+            get
+            {
+                if (Children.Any() && Children.All(c => c.Status))
+                {
+                    var SuccessMesssage = $"{SuccessMessage} {string.Join(' ', [.. Children.Select(c => c.SuccessMessage)])}";
+                    Children.Clear();
+                }
+
+                if (status.HasValue)
+                {
+                    return status.Value;
+                }
+
+                if (Children.Any())
+                {
+                    return Children.All(c => c.Status);
+                }
+
+                return false;
+            }
+        }
+        public int Level { get; set; } = 1;
+        public string Title { get; set; } = title;
+        public string SuccessMessage { get; set; } = success ?? string.Empty;
+        public List<NodeItem> Children { get; set; } = new();
+        public NodeItem AddChild(string childTitle)
+        {
+            var child = new NodeItem(childTitle);
+            child.Level = this.Level + 1;
+            Children.Add(child);
+            return child;
+        }
+    }
+}

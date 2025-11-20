@@ -1,0 +1,20 @@
+﻿@if (Medium is null)
+{
+    return;
+}
+
+@if (Medium.MediumPreview is null)
+{
+    <WaitingComponent Text="@WaitingText" />
+}
+else
+{
+    <DataContentTile Content="@Medium.MediumPreview" />
+}
+
+@code {
+    [Parameter]
+    public MediumReport? Medium { get; set; } = null;
+
+    private string WaitingText => Medium is null ? "Waiting for medium preview to begin..." : $"Generating previews for medium: {Medium.Medium}...";
+}
