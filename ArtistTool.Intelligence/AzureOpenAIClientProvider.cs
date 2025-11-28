@@ -21,15 +21,21 @@ namespace ArtistTool.Intelligence
         /// <param name="imageDeployment">Deployment name for image model (e.g., gpt-image-1)</param>
         /// <param name="loggerFactory">Optional logger factory for enabling logging on chat clients</param>
         public AzureOpenAIClientProvider(
-            string endpoint, 
-            string conversationalDeployment = "gpt-4o", 
+            string endpoint,
+            string conversationalDeployment = "gpt-4o",
             string visionDeployment = "gpt-4o",
             string imageDeployment = "gpt-image-1",
+            string apiKey = "",
             ILoggerFactory? loggerFactory = null)
         {
             if (string.IsNullOrWhiteSpace(endpoint))
             {
                 throw new ArgumentException("Azure OpenAI endpoint is required", nameof(endpoint));
+            }
+
+            if (!endpoint.Contains(".openai.azure.com", StringComparison.OrdinalIgnoreCase))
+            {
+                throw new ArgumentException("Endpoint must be an Azure OpenAI endpoint (https://{resource}.openai.azure.com/)", nameof(endpoint));
             }
 
             if (string.IsNullOrWhiteSpace(conversationalDeployment))
@@ -47,11 +53,19 @@ namespace ArtistTool.Intelligence
                 throw new ArgumentException("Image deployment name is required", nameof(imageDeployment));
             }
 
-            // Use DefaultAzureCredential for managed identity support
-            // This supports: Managed Identity, Azure CLI, Visual Studio, Environment Variables, etc.
-            var credential = new DefaultAzureCredential();
-            
-            var azureClient = new AzureOpenAIClient(new Uri(endpoint), credential);
+            var endpointUri = new Uri(endpoint);
+            AzureOpenAIClient azureClient;
+
+            if (!string.IsNullOrWhiteSpace(apiKey))
+            {
+                // API key auth (great for local/dev)
+                azureClient = new AzureOpenAIClient(endpointUri, new Azure.AzureKeyCredential(apiKey));
+            }
+            else
+            {
+                // AAD auth (Managed Identity / CLI / VS)
+                azureClient = new AzureOpenAIClient(endpointUri, new Azure.Identity.DefaultAzureCredential());
+            }
 
             // Get ChatClient instances from Azure OpenAI and enhance with logging & telemetry
             var conversationalChatClient = azureClient.GetChatClient(conversationalDeployment);
@@ -60,21 +74,21 @@ namespace ArtistTool.Intelligence
 
             // Build enhanced clients with logging and OpenTelemetry using ChatClientBuilder
             _conversationalClient = BuildEnhancedChatClient(
-                conversationalChatClient.AsIChatClient(), 
-                "conversational", 
+                conversationalChatClient.AsIChatClient(),
+                "conversational",
                 loggerFactory);
-            
+
             _visionClient = BuildEnhancedChatClient(
-                visionChatClient.AsIChatClient(), 
-                "vision", 
+                visionChatClient.AsIChatClient(),
+                "vision",
                 loggerFactory);
-            
+
             _imageClient = imageClient.AsIImageGenerator();
         }
 
         private static IChatClient BuildEnhancedChatClient(
-            IChatClient innerClient, 
-            string clientName, 
+            IChatClient innerClient,
+            string clientName,
             ILoggerFactory? loggerFactory)
         {
             var builder = new ChatClientBuilder(innerClient);

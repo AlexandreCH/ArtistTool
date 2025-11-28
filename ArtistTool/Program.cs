@@ -4,8 +4,31 @@ using ArtistTool.Domain;
 using ArtistTool.Intelligence;
 using ArtistTool.Services;
 using ArtistTool.Workflows;
+using Azure.Identity;
 
 var builder = WebApplication.CreateBuilder(args);
+
+// Ensure user-secrets are included in Development
+if (builder.Environment.IsDevelopment())
+{
+    builder.Configuration.AddUserSecrets<Program>(optional: true);
+}
+// Add Key Vault in non-Development (or when available)
+if (!builder.Environment.IsDevelopment())
+{
+    // Base config first
+    //var configBuilder = builder.Configuration;
+
+    //var keyVaultUrl = builder.Configuration["KeyVault:VaultUri"]; // e.g., https://yourvault.vault.azure.net/
+    //if (!string.IsNullOrWhiteSpace(keyVaultUrl))
+    //{
+    //    configBuilder.AddAzureKeyVault(new Uri(keyVaultUrl), new DefaultAzureCredential());
+    //}
+}
+
+// Bind options
+builder.Services.Configure<AzureOpenAIOptions>(
+    builder.Configuration.GetSection("AzureOpenAI"));
 
 builder.AddServiceDefaults();
 
@@ -17,7 +40,7 @@ var useAI = builder.Configuration["Options:UseAI"]?.ToLower() == "true";
 var useWorkflows = builder.Configuration["Options:UseWorkflows"]?.ToLower() == "true";
 
 if (useAI)
-{ 
+{
     builder.Services.AddSingleton(new AIOptions
     {
         UseAI = true,
@@ -26,7 +49,7 @@ if (useAI)
     });
 
     builder.Services.AddIntelligenceServices(key => builder.Configuration[key] ?? string.Empty);
-    
+
     // Add workflow services if enabled
     if (useWorkflows)
     {
@@ -49,7 +72,7 @@ builder.Services.AddServices();
 var app = builder.Build();
 
 var dbLogger = app.Services.GetRequiredService<ILogger<Program>>();
-var database = app.Services.GetRequiredService<IPhotoDatabase>();    
+var database = app.Services.GetRequiredService<IPhotoDatabase>();
 dbLogger.LogInformation("Initializing PhotoDatabase");
 await database.InitAsync(CancellationToken.None);
 dbLogger.LogInformation("PhotoDatabase initialized successfully");
@@ -75,34 +98,34 @@ app.MapDefaultEndpoints();
 
 app.MapGet("/report/{photoId}/{reportId:int}/{filename}",
     async (string photoId, int reportId, string filename, IProjectManager pm, ILogger<Program> logger) =>
-{
-    logger.LogDebug("Report request: photoId={PhotoId}, reportId={ReportId}, filename={Filename}", photoId, reportId, filename);
+    {
+        logger.LogDebug("Report request: photoId={PhotoId}, reportId={ReportId}, filename={Filename}", photoId, reportId, filename);
 
-    try
-    {
-        var (content, mediaType) = await pm.GetReportAssetAsync(photoId, reportId, filename);
-        if (mediaType.StartsWith("image", StringComparison.OrdinalIgnoreCase))
+        try
         {
-            logger.LogDebug("Serving report image asset: photoId={PhotoId}, reportId={ReportId}, filename={Filename}", photoId, reportId, filename);
-            return Results.File(content.ToArray(), mediaType, filename);
+            var (content, mediaType) = await pm.GetReportAssetAsync(photoId, reportId, filename);
+            if (mediaType.StartsWith("image", StringComparison.OrdinalIgnoreCase))
+            {
+                logger.LogDebug("Serving report image asset: photoId={PhotoId}, reportId={ReportId}, filename={Filename}", photoId, reportId, filename);
+                return Results.File(content.ToArray(), mediaType, filename);
+            }
+            else
+            {
+                logger.LogDebug("Serving report text asset: photoId={PhotoId}, reportId={ReportId}, filename={Filename}", photoId, reportId, filename);
+                return Results.Content(System.Text.Encoding.UTF8.GetString(content.Span), mediaType);
+            }
         }
-        else
+        catch (Exception ex)
         {
-            logger.LogDebug("Serving report text asset: photoId={PhotoId}, reportId={ReportId}, filename={Filename}", photoId, reportId, filename);
-            return Results.Content(System.Text.Encoding.UTF8.GetString(content.Span), mediaType);
+            logger.LogError(ex, "Error retrieving report asset: photoId={PhotoId}, reportId={ReportId}, filename={Filename}", photoId, reportId, filename);
+            return Results.StatusCode(500);
         }
-    }
-    catch (Exception ex)
-    {
-        logger.LogError(ex, "Error retrieving report asset: photoId={PhotoId}, reportId={ReportId}, filename={Filename}", photoId, reportId, filename);
-        return Results.StatusCode(500);
-    }
-});
+    });
 
 app.MapGet("/images/{type}/{id}", async (string type, string id, IPhotoDatabase db, ILogger<Program> logger) =>
 {
     logger.LogDebug("Image request: type={Type}, id={Id}", type, id);
-    
+
     // Check if this is a canvas preview request
     if (id.EndsWith("_canvas_preview"))
     {
@@ -113,29 +136,29 @@ app.MapGet("/images/{type}/{id}", async (string type, string id, IPhotoDatabase 
             logger.LogWarning("Photo not found for canvas preview: id={Id}", photoId);
             return Results.NotFound();
         }
-        
+
         var canvasPreviewPath = Path.Combine(
             Path.GetDirectoryName(photoForCanvas.Path)!,
             $"{photoId}_canvas_preview.png"
         );
-        
+
         if (File.Exists(canvasPreviewPath))
         {
             logger.LogDebug("Serving canvas preview from {Path}", canvasPreviewPath);
             return Results.File(canvasPreviewPath, "image/png");
         }
-        
+
         logger.LogWarning("Canvas preview not found at {Path}", canvasPreviewPath);
         return Results.NotFound();
     }
-    
+
     var photo = await db.GetPhotographWithIdAsync(id);
     if (photo is null)
     {
         logger.LogWarning("Image not found: id={Id}", id);
         return Results.NotFound();
     }
-    
+
     var path = type == "thumb" ? photo.ThumbnailPath : photo.Path;
     logger.LogDebug("Serving image from {Path}", path);
     return Results.File(path, photo.ContentType, photo.FileName);
@@ -158,3 +181,13 @@ app.MapRazorComponents<App>()
     .AddInteractiveServerRenderMode();
 
 app.Run();
+
+// Strongly-typed options
+public sealed class AzureOpenAIOptions
+{
+    public string? Endpoint { get; set; }
+    public string? ConversationalDeployment { get; set; }
+    public string? VisionDeployment { get; set; }
+    public string? ImageDeployment { get; set; }
+    public string? ApiKey { get; set; } // from user-secrets or Key Vault
+}

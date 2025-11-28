@@ -6,7 +6,8 @@ namespace ArtistTool.Intelligence
 {
     public static class Services
     {
-        public static IServiceCollection AddIntelligenceServices(this IServiceCollection services, Func<string, string> config)
+        public static IServiceCollection AddIntelligenceServices(this IServiceCollection services,
+            Func<string, string> config)
         {
             services.AddSingleton<PhotoIntelligenceService>();
             // Register database with proper async initialization
@@ -16,6 +17,7 @@ namespace ArtistTool.Intelligence
                 config("AzureOpenAI:ConversationalDeployment")!,
                 config("AzureOpenAI:VisionDeployment")!,
                 config("AzureOpenAI:ImageDeployment")!,
+                config("AzureOpenAI:ApiKey")!,
                 sp.GetRequiredService<ILoggerFactory>()));
 
             return services;

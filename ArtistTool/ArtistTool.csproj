@@ -1,22 +1,23 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk.Web">
 
-  <PropertyGroup>
-    <TargetFramework>net10.0</TargetFramework>
-    <Nullable>enable</Nullable>
-    <ImplicitUsings>enable</ImplicitUsings>
-    <BlazorDisableThrowNavigationException>true</BlazorDisableThrowNavigationException>
-  </PropertyGroup>
+	<PropertyGroup>
+		<TargetFramework>net10.0</TargetFramework>
+		<Nullable>enable</Nullable>
+		<ImplicitUsings>enable</ImplicitUsings>
+		<BlazorDisableThrowNavigationException>true</BlazorDisableThrowNavigationException>
+		<UserSecretsId>a1b2fa2f-cbf8-4e7e-9d48-c0ef0c224ec6</UserSecretsId>
+	</PropertyGroup>
 
-  <ItemGroup>
-    <ProjectReference Include="..\ArtistTool.Domain\ArtistTool.Domain.csproj" />
-    <ProjectReference Include="..\ArtistTool.Intelligence\ArtistTool.Intelligence.csproj" />
-    <ProjectReference Include="..\ArtistTool.ServiceDefaults\ArtistTool.ServiceDefaults.csproj" />
-    <ProjectReference Include="..\ArtistTool.Services\ArtistTool.Services.csproj" />
-    <ProjectReference Include="..\ArtistTool.Workflows\ArtistTool.Workflows.csproj" />
-  </ItemGroup>
+	<ItemGroup>
+		<ProjectReference Include="..\ArtistTool.Domain\ArtistTool.Domain.csproj" />
+		<ProjectReference Include="..\ArtistTool.Intelligence\ArtistTool.Intelligence.csproj" />
+		<ProjectReference Include="..\ArtistTool.ServiceDefaults\ArtistTool.ServiceDefaults.csproj" />
+		<ProjectReference Include="..\ArtistTool.Services\ArtistTool.Services.csproj" />
+		<ProjectReference Include="..\ArtistTool.Workflows\ArtistTool.Workflows.csproj" />
+	</ItemGroup>
 
-  <ItemGroup>
-    <Folder Include="wwwroot\images\" />
-  </ItemGroup>
+	<ItemGroup>
+		<Folder Include="wwwroot\images\" />
+	</ItemGroup>
 
 </Project>
